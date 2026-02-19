@@ -227,6 +227,7 @@ shop-pay-button {
   /* Curtain Animation */
   .curtain-lift {
     animation: curtainLift 1.5s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+    animation-delay: 0.5s; /* Set delay to 0.5s */
   }
 
   @keyframes curtainLift {

@@ -40,17 +40,31 @@ export default function Homepage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 z-10" />
 
         <div className="relative z-20 container mx-auto px-6 md:px-12 flex flex-col items-start justify-center h-full">
-          <div className="space-y-2">
+          <div className="space-y-6 w-full">
             <h2 className="text-accent tracking-[0.5em] text-sm md:text-base font-mono uppercase animate-pulse">
               システム起動 // Ver. 2.0
             </h2>
-            <h1 
-              className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter uppercase glitch-text"
-              data-text="APEX TOYS"
-              style={{ fontFamily: '"Helvetica Neue", sans-serif' }}
-            >
-              APEX TOYS
-            </h1>
+            
+            <div className="w-full flex flex-col lg:flex-row items-baseline lg:items-end justify-between gap-4 lg:gap-12">
+              {/* Left: APEX TOYS */}
+              <h1
+                className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter uppercase glitch-text leading-none"
+                data-text="APEX TOYS"
+                style={{fontFamily: '"Orbitron", sans-serif'}}
+              >
+                APEX TOYS
+              </h1>
+
+              {/* Right: APEX INNOVATION */}
+              <h2
+                className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter uppercase text-gray-500 leading-none"
+                style={{fontFamily: '"Orbitron", sans-serif'}}
+              >
+                APEX
+                <br className="hidden lg:block" /> INNOVATION
+              </h2>
+            </div>
+
             <p className="max-w-xl text-gray-300 text-lg md:text-xl leading-relaxed mt-6 border-l-2 border-accent pl-6">
               限定特典グッズと高品質フィギュアの世界へ<br/>
               あなただけのコレクションを始めよう

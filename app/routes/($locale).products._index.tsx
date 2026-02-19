@@ -67,11 +67,17 @@ export default function AllProducts() {
 
   return (
     <div className="h-screen w-full bg-black overflow-y-scroll snap-y snap-mandatory hiddenScroll relative">
-      {/* Opening Curtain */}
-      <div className="fixed top-0 left-0 w-full h-full bg-black z-50 curtain-lift pointer-events-none" />
+      {/* Fixed Background (Always visible) */}
+      <div
+        className="fixed inset-0 w-full h-full z-0 bg-cover bg-center pointer-events-none"
+        style={{
+          backgroundImage: 'url("/curtain-bg.svg")',
+          backgroundColor: '#000',
+        }}
+      />
 
-      {/* Background Dots */}
-      <div className="fixed inset-0 w-full h-full dots-slide-down pointer-events-none z-0 opacity-50" />
+      {/* Opening Curtain (Black overlay that lifts up) */}
+      <div className="fixed top-0 left-0 w-full h-full bg-black z-50 curtain-lift pointer-events-none" />
 
       {/* Navigation Overlay */}
       <div className="fixed top-0 left-0 w-full h-20 bg-gradient-to-b from-black/80 to-transparent z-40 pointer-events-none" />

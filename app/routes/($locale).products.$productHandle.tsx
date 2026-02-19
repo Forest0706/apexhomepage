@@ -47,9 +47,21 @@ export default function Product() {
   };
 
   return (
-    <div className="bg-black text-white min-h-screen">
-      {/* メインビジュアル & ギャラリー (縦スクロール) */}
-      <div className="w-full max-w-7xl mx-auto px-0 md:px-6 lg:px-8 pt-20 pb-32">
+    <div className="bg-black text-white min-h-screen relative">
+      {/* Fixed Background (Always visible) */}
+      <div
+        className="fixed inset-0 w-full h-full z-0 bg-cover bg-center pointer-events-none"
+        style={{
+          backgroundImage: 'url("/curtain-bg.svg")',
+          backgroundColor: '#000',
+        }}
+      />
+
+      {/* Opening Curtain (Black overlay that lifts up) */}
+      <div className="fixed top-0 left-0 w-full h-full bg-black z-50 curtain-lift pointer-events-none" />
+
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-0 md:px-6 lg:px-8 pt-20 pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* 左側: 画像ギャラリー (スクロール追従なし、メインコンテンツ) */}

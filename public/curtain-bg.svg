@@ -1,0 +1,64 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feBlend mode="overlay" in2="SourceGraphic" result="blend"/>
+    </filter>
+  </defs>
+  
+  <!-- Dark Background -->
+  <rect width="1920" height="1080" fill="#050505"/>
+  
+  <!-- Noise Layer (Static) -->
+  <rect width="1920" height="1080" filter="url(#noise)" opacity="0.15"/>
+  
+  <!-- Scattered Floating Cubes (Light Gray Squares) -->
+  <g>
+    <style>
+      @keyframes float1 { 0% { transform: translate(0, 0); } 50% { transform: translate(20px, -20px); } 100% { transform: translate(0, 0); } }
+      @keyframes float2 { 0% { transform: translate(0, 0); } 50% { transform: translate(-15px, 15px); } 100% { transform: translate(0, 0); } }
+      @keyframes float3 { 0% { transform: translate(0, 0); } 50% { transform: translate(10px, 20px); } 100% { transform: translate(0, 0); } }
+      
+      .cube-float-1 { animation: float1 10s ease-in-out infinite; }
+      .cube-float-2 { animation: float2 15s ease-in-out infinite; }
+      .cube-float-3 { animation: float3 12s ease-in-out infinite; }
+    </style>
+
+    <!-- Large scattered cubes -->
+    <rect class="cube-float-1" x="200" y="300" width="120" height="120" fill="#333" opacity="0.15" />
+    <rect class="cube-float-2" x="1600" y="600" width="150" height="150" fill="#2a2a2a" opacity="0.15" />
+    <rect class="cube-float-3" x="900" y="100" width="80" height="80" fill="#222" opacity="0.15" />
+    
+    <!-- Medium scattered cubes -->
+    <rect class="cube-float-2" x="500" y="700" width="60" height="60" fill="#333" opacity="0.15" />
+    <rect class="cube-float-1" x="1200" y="400" width="50" height="50" fill="#2a2a2a" opacity="0.15" />
+    <rect class="cube-float-3" x="100" y="800" width="70" height="70" fill="#222" opacity="0.15" />
+    <rect class="cube-float-1" x="1400" y="200" width="60" height="60" fill="#333" opacity="0.15" />
+    
+    <!-- Small scattered particles -->
+    <rect class="cube-float-3" x="350" y="450" width="20" height="20" fill="#444" opacity="0.15" />
+    <rect class="cube-float-1" x="800" y="850" width="15" height="15" fill="#444" opacity="0.15" />
+    <rect class="cube-float-2" x="1700" y="150" width="25" height="25" fill="#444" opacity="0.15" />
+    <rect class="cube-float-1" x="1100" y="600" width="10" height="10" fill="#444" opacity="0.15" />
+    <rect class="cube-float-3" x="600" y="200" width="18" height="18" fill="#444" opacity="0.15" />
+    <rect class="cube-float-2" x="1300" y="900" width="22" height="22" fill="#444" opacity="0.15" />
+  </g>
+
+  <!-- Cyan Crosshairs (Top Row) -->
+  <g stroke="#00bfff" stroke-width="2" opacity="0.8">
+    <path d="M384 100 L384 120 M374 110 L394 110" /> <!-- 1/5 -->
+    <path d="M768 100 L768 120 M758 110 L778 110" /> <!-- 2/5 -->
+    <path d="M1152 100 L1152 120 M1142 110 L1162 110" /> <!-- 3/5 -->
+    <path d="M1536 100 L1536 120 M1526 110 L1546 110" /> <!-- 4/5 -->
+  </g>
+
+  <!-- Cyan Crosshairs (Bottom Row) -->
+  <g stroke="#00bfff" stroke-width="2" opacity="0.8">
+    <path d="M384 900 L384 920 M374 910 L394 910" /> <!-- 1/5 -->
+    <path d="M768 900 L768 920 M758 910 L778 910" /> <!-- 2/5 -->
+    <path d="M1152 900 L1152 920 M1142 910 L1162 910" /> <!-- 3/5 -->
+    <path d="M1536 900 L1536 920 M1526 910 L1546 910" /> <!-- 4/5 -->
+  </g>
+
+</svg>
