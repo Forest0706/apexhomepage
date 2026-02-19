@@ -46,7 +46,8 @@ type LayoutProps = {
 export function PageLayout({children, layout}: LayoutProps) {
   const {headerMenu, footerMenu} = layout || {};
   const location = useLocation();
-  const isProductsPage = location.pathname === '/products' || location.pathname === '/products/';
+  const isProductsPage =
+    location.pathname === '/products' || location.pathname === '/products/';
 
   return (
     <>
@@ -72,15 +73,10 @@ function Logo({isHome}: {isHome: boolean}) {
   return (
     <div className="flex items-center gap-2 font-bold font-serif text-2xl tracking-widest uppercase leading-none">
       <img
-        src="/默认用这个文件-APEX新logo-tm.svg"
+        src="/Apex Innovation White.png"
         alt="APEX TOYS"
         className="h-8 w-auto object-contain"
-        onError={(e) => {
-          e.currentTarget.style.display = 'none';
-          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-        }}
       />
-      <span className="hidden">APEX TOYS</span>
     </div>
   );
 }
@@ -197,7 +193,7 @@ function MenuMobileNav({
         </Link>
       </span>
       <span className="block">
-        <Link to="/pages/contact" onClick={onClose} className="pb-1">
+        <Link to="/contact" onClick={onClose} className="pb-1">
           <Text as="span" size="copy">
             お問い合わせ
           </Text>
@@ -326,7 +322,7 @@ function DesktopHeader({
             APEXについて
           </Link>
           <Link
-            to="/pages/contact"
+            to="/contact"
             prefetch="intent"
             className="pb-1 hover:text-primary/70 transition-colors"
           >
@@ -460,10 +456,8 @@ function Footer() {
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
         <div className="col-span-1 md:col-span-2">
-          <Link to="/" className="inline-block mb-6">
-            <h2 className="text-2xl font-bold tracking-widest uppercase font-serif">
-              APEX TOYS
-            </h2>
+          <Link to="/" className="inline-block mb-6" prefetch="intent">
+            <Logo isHome={isHome} />
           </Link>
           <p className="text-gray-400 text-sm leading-relaxed max-w-md">
             APEX TOYSは、ハイクオリティなフィギュアとコレクターズアイテムを提供する専門ブランドです。
@@ -496,7 +490,7 @@ function Footer() {
             </li>
             <li>
               <Link
-                to="/pages/contact"
+                to="/contact"
                 className="hover:text-white transition-colors"
               >
                 お問い合わせ

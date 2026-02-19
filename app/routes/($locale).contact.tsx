@@ -1,11 +1,7 @@
 import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {getSeoMeta} from '@shopify/hydrogen';
-
-import {routeHeaders} from '~/data/cache';
 import {Button} from '~/components/Button';
-
-export const headers = routeHeaders;
 
 export async function loader(args: LoaderFunctionArgs) {
   return json({
@@ -17,7 +13,7 @@ export async function loader(args: LoaderFunctionArgs) {
 }
 
 export const meta = ({data}: {data: any}) => {
-  return getSeoMeta(data.seo);
+  return getSeoMeta(data?.seo ?? {});
 };
 
 export default function Contact() {
