@@ -192,13 +192,7 @@ function MenuMobileNav({
           </Text>
         </Link>
       </span>
-      <span className="block">
-        <Link to="/contact" onClick={onClose} className="pb-1">
-          <Text as="span" size="copy">
-            お問い合わせ
-          </Text>
-        </Link>
-      </span>
+
     </nav>
   );
 }
@@ -321,13 +315,7 @@ function DesktopHeader({
           >
             APEXについて
           </Link>
-          <Link
-            to="/contact"
-            prefetch="intent"
-            className="pb-1 hover:text-primary/70 transition-colors"
-          >
-            お問い合わせ
-          </Link>
+
         </nav>
       </div>
       <div className="flex items-center gap-1">
@@ -488,14 +476,7 @@ function Footer() {
                 APEXについて
               </Link>
             </li>
-            <li>
-              <Link
-                to="/contact"
-                className="hover:text-white transition-colors"
-              >
-                お問い合わせ
-              </Link>
-            </li>
+
           </ul>
         </div>
 
