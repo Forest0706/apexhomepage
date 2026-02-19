@@ -4,9 +4,9 @@
 
 /* Tokens */
 :root {
-  --color-primary: 20 20 20; /* Text, buttons, etc. */
-  --color-contrast: 250 250 249; /* Backgrounds, borders, etc. */
-  --color-accent: 191 72 0; /* Labels like "On sale" */
+  --color-primary: 250 250 250; /* Light Text */
+  --color-contrast: 20 20 23; /* Dark Background (Arctech style) */
+  --color-accent: 0 191 255; /* Cyan for Tech feel */
   --font-size-fine: 0.75rem; /* text-xs */
   --font-size-copy: 1rem; /* text-base */
   --font-size-lead: 1.125rem; /* text-lg */
@@ -34,14 +34,6 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-primary: 250 250 250;
-    --color-contrast: 32 33 36;
-    --color-accent: 235 86 40;
-  }
-}
-
 @keyframes fadeInAnimation {
   0% {
     opacity: 0;
@@ -64,6 +56,10 @@ shop-pay-button {
 
   body {
     @apply border-primary/10 bg-contrast text-primary/90 antialiased;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
 
   html {
@@ -149,34 +145,112 @@ shop-pay-button {
     }
   }
 
-  .absolute-center {
-    @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
-  }
-
-  .strike {
+  /* ... (keep other existing utilities) ... */
+  
+  /* Cyber-Noir Glitch Effects */
+  .glitch-text {
     position: relative;
-    &::before {
-      content: '';
-      display: block;
-      position: absolute;
-      width: 108%;
-      height: 1.5px;
-      left: -4%;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgb(var(--color-primary));
-      box-shadow: 0.5px 0.5px 0px 0.5px rgb(var(--color-contrast));
+    /* Ensure text is visible even if pseudo-elements glitch */
+    color: white; 
+  }
+  
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: black; /* Match background to hide original text parts */
+  }
+  
+  .glitch-text::before {
+    left: 2px;
+    text-shadow: -1px 0 #ff00c1;
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+    animation: glitch-anim-1 3s infinite linear alternate-reverse;
+  }
+  
+  .glitch-text::after {
+    left: -2px;
+    text-shadow: -1px 0 #00fff9;
+    clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+    animation: glitch-anim-2 2.5s infinite linear alternate-reverse;
+  }
+  
+  @keyframes glitch-anim-1 {
+    0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
+    20% { clip-path: inset(60% 0 10% 0); transform: translate(1px, -1px); }
+    40% { clip-path: inset(40% 0 50% 0); transform: translate(-1px, 2px); }
+    60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+    80% { clip-path: inset(10% 0 70% 0); transform: translate(-1px, 1px); }
+    100% { clip-path: inset(30% 0 40% 0); transform: translate(1px, -1px); }
+  }
+  
+  @keyframes glitch-anim-2 {
+    0% { clip-path: inset(25% 0 50% 0); transform: translate(2px, -1px); }
+    20% { clip-path: inset(10% 0 60% 0); transform: translate(-1px, 1px); }
+    40% { clip-path: inset(80% 0 5% 0); transform: translate(1px, -2px); }
+    60% { clip-path: inset(15% 0 80% 0); transform: translate(-2px, 2px); }
+    80% { clip-path: inset(55% 0 10% 0); transform: translate(2px, -1px); }
+    100% { clip-path: inset(40% 0 30% 0); transform: translate(-1px, 1px); }
+  }
+
+  /* Slide In Animation (Product Image) */
+  .slide-in-bottom {
+    opacity: 0;
+    transform: translateY(100px);
+    animation: slideInBottom 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 0.2s;
+  }
+
+  /* Slide In Animation (Text Content) */
+  .slide-in-text {
+    opacity: 0;
+    transform: translateY(50px);
+    animation: slideInBottom 1.0s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 0.6s; /* Starts after image */
+  }
+
+  @keyframes slideInBottom {
+    0% {
+      opacity: 0;
+      transform: translateY(100px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 
-  .card-image {
-    @apply relative flex items-center justify-center overflow-clip rounded;
-    &::before {
-      content: ' ';
-      @apply absolute top-0 left-0 z-10 block h-full w-full rounded shadow-border;
+  /* Curtain Animation */
+  .curtain-lift {
+    animation: curtainLift 1.5s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  }
+
+  @keyframes curtainLift {
+    0% {
+      height: 100%;
     }
-    img {
-      @apply aspect-[inherit] w-full object-cover;
+    100% {
+      height: 0%;
+    }
+  }
+
+  /* Dots Animation */
+  .dots-slide-down {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: dotsSlideDown 20s linear infinite;
+  }
+
+  @keyframes dotsSlideDown {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 0 100%;
     }
   }
 }

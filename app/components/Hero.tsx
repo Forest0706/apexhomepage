@@ -14,6 +14,7 @@ type HeroProps = CollectionContentFragment & {
   height?: 'full';
   top?: boolean;
   loading?: HTMLImageElement['loading'];
+  backgroundImage?: string;
 };
 
 /**
@@ -29,6 +30,7 @@ export function Hero({
   spread,
   spreadSecondary,
   top,
+  backgroundImage,
 }: HeroProps) {
   return (
     <Link to={`/collections/${handle}`} prefetch="viewport">
@@ -42,30 +44,41 @@ export function Hero({
         )}
       >
         <div className="absolute inset-0 grid flex-grow grid-flow-col pointer-events-none auto-cols-fr -z-10 content-stretch overflow-clip">
-          {spread?.reference && (
-            <div>
-              <SpreadMedia
-                sizes={
-                  spreadSecondary?.reference
-                    ? '(min-width: 48em) 50vw, 100vw'
-                    : '100vw'
-                }
-                data={spread.reference as Media}
-                loading={loading}
-              />
-            </div>
-          )}
-          {spreadSecondary?.reference && (
-            <div className="hidden md:block">
-              <SpreadMedia
-                sizes="50vw"
-                data={spreadSecondary.reference as Media}
-                loading={loading}
-              />
-            </div>
+          {backgroundImage ? (
+            <img
+              src={backgroundImage}
+              alt={heading?.value || 'Hero Banner'}
+              className="block object-cover w-full h-full"
+              loading={loading}
+            />
+          ) : (
+            <>
+              {spread?.reference && (
+                <div>
+                  <SpreadMedia
+                    sizes={
+                      spreadSecondary?.reference
+                        ? '(min-width: 48em) 50vw, 100vw'
+                        : '100vw'
+                    }
+                    data={spread.reference as Media}
+                    loading={loading}
+                  />
+                </div>
+              )}
+              {spreadSecondary?.reference && (
+                <div className="hidden md:block">
+                  <SpreadMedia
+                    sizes="50vw"
+                    data={spreadSecondary.reference as Media}
+                    loading={loading}
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
-        <div className="flex flex-col items-baseline justify-between gap-4 px-6 py-8 sm:px-8 md:px-12 bg-gradient-to-t dark:from-contrast/60 dark:text-primary from-primary/60 text-contrast">
+        <div className="flex flex-col items-baseline justify-between gap-4 px-6 py-8 sm:px-8 md:px-12 bg-gradient-to-t from-black/80 to-transparent text-white">
           {heading?.value && (
             <Heading format as="h2" size="display" className="max-w-md">
               {heading.value}

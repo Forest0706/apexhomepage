@@ -1,4 +1,10 @@
-import {useParams, Form, Await, useRouteLoaderData} from '@remix-run/react';
+import {
+  useParams,
+  Form,
+  Await,
+  useRouteLoaderData,
+  useLocation,
+} from '@remix-run/react';
 import useWindowScroll from 'react-use/esm/useWindowScroll';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
@@ -39,6 +45,9 @@ type LayoutProps = {
 
 export function PageLayout({children, layout}: LayoutProps) {
   const {headerMenu, footerMenu} = layout || {};
+  const location = useLocation();
+  const isProductsPage = location.pathname === '/products' || location.pathname === '/products/';
+
   return (
     <>
       <div className="flex flex-col min-h-screen">
@@ -47,15 +56,32 @@ export function PageLayout({children, layout}: LayoutProps) {
             Skip to content
           </a>
         </div>
-        {headerMenu && layout?.shop.name && (
+        {headerMenu && layout?.shop.name && !isProductsPage && (
           <Header title={layout.shop.name} menu={headerMenu} />
         )}
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
       </div>
-      {footerMenu && <Footer menu={footerMenu} />}
+      {!isProductsPage && <Footer />}
     </>
+  );
+}
+
+function Logo({isHome}: {isHome: boolean}) {
+  return (
+    <div className="flex items-center gap-2 font-bold font-serif text-2xl tracking-widest uppercase leading-none">
+      <img
+        src="/默认用这个文件-APEX新logo-tm.svg"
+        alt="APEX TOYS"
+        className="h-8 w-auto object-contain"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+        }}
+      />
+      <span className="hidden">APEX TOYS</span>
+    </div>
   );
 }
 
@@ -109,7 +135,7 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   if (!rootData) return null;
 
   return (
-    <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
+    <Drawer open={isOpen} onClose={onClose} heading="カート" openFrom="right">
       <div className="grid">
         <Suspense fallback={<CartLoading />}>
           <Await resolve={rootData?.cart}>
@@ -131,7 +157,7 @@ export function MenuDrawer({
   menu: EnhancedMenu;
 }) {
   return (
-    <Drawer open={isOpen} onClose={onClose} openFrom="left" heading="Menu">
+    <Drawer open={isOpen} onClose={onClose} openFrom="left" heading="メニュー">
       <div className="grid">
         <MenuMobileNav menu={menu} onClose={onClose} />
       </div>
@@ -149,22 +175,34 @@ function MenuMobileNav({
   return (
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
       {/* Top level menu items */}
-      {(menu?.items || []).map((item) => (
-        <span key={item.id} className="block">
-          <Link
-            to={item.to}
-            target={item.target}
-            onClick={onClose}
-            className={({isActive}) =>
-              isActive ? 'pb-1 border-b -mb-px' : 'pb-1'
-            }
-          >
-            <Text as="span" size="copy">
-              {item.title}
-            </Text>
-          </Link>
-        </span>
-      ))}
+      <span className="block">
+        <Link to="/" onClick={onClose} className="pb-1">
+          <Text as="span" size="copy">
+            ホーム
+          </Text>
+        </Link>
+      </span>
+      <span className="block">
+        <Link to="/collections/all" onClick={onClose} className="pb-1">
+          <Text as="span" size="copy">
+            商品一覧
+          </Text>
+        </Link>
+      </span>
+      <span className="block">
+        <Link to="/about" onClick={onClose} className="pb-1">
+          <Text as="span" size="copy">
+            APEXについて
+          </Text>
+        </Link>
+      </span>
+      <span className="block">
+        <Link to="/pages/contact" onClick={onClose} className="pb-1">
+          <Text as="span" size="copy">
+            お問い合わせ
+          </Text>
+        </Link>
+      </span>
     </nav>
   );
 }
@@ -189,7 +227,7 @@ function MobileHeader({
       role="banner"
       className={`${
         isHome
-          ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
+          ? 'bg-contrast/80 text-primary shadow-darkHeader'
           : 'bg-contrast/80 text-primary'
       } flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`}
     >
@@ -212,14 +250,10 @@ function MobileHeader({
             <IconSearch />
           </button>
           <Input
-            className={
-              isHome
-                ? 'focus:border-contrast/20 dark:focus:border-primary/20'
-                : 'focus:border-primary/20'
-            }
+            className="focus:border-primary/20"
             type="search"
             variant="minisearch"
-            placeholder="Search"
+            placeholder="検索"
             name="q"
           />
         </Form>
@@ -228,13 +262,9 @@ function MobileHeader({
       <Link
         className="flex items-center self-stretch leading-[3rem] md:leading-[4rem] justify-center flex-grow w-full h-full"
         to="/"
+        prefetch="intent"
       >
-        <Heading
-          className="font-bold text-center leading-none"
-          as={isHome ? 'h1' : 'h2'}
-        >
-          {title}
-        </Heading>
+        <Logo isHome={isHome} />
       </Link>
 
       <div className="flex items-center justify-end w-full gap-4">
@@ -263,31 +293,45 @@ function DesktopHeader({
       role="banner"
       className={`${
         isHome
-          ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
+          ? 'bg-contrast/80 text-primary shadow-darkHeader'
           : 'bg-contrast/80 text-primary'
       } ${
         !isHome && y > 50 && ' shadow-lightHeader'
       } hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`}
     >
-      <div className="flex gap-12">
-        <Link className="font-bold" to="/" prefetch="intent">
-          {title}
+      <div className="flex gap-12 items-center">
+        <Link to="/" prefetch="intent">
+          <Logo isHome={isHome} />
         </Link>
-        <nav className="flex gap-8">
-          {/* Top level menu items */}
-          {(menu?.items || []).map((item) => (
-            <Link
-              key={item.id}
-              to={item.to}
-              target={item.target}
-              prefetch="intent"
-              className={({isActive}) =>
-                isActive ? 'pb-1 border-b -mb-px' : 'pb-1'
-              }
-            >
-              {item.title}
-            </Link>
-          ))}
+        <nav className="flex gap-8 items-center">
+          <Link
+            to="/"
+            prefetch="intent"
+            className="pb-1 hover:text-primary/70 transition-colors"
+          >
+            ホーム
+          </Link>
+          <Link
+            to="/collections/all"
+            prefetch="intent"
+            className="pb-1 hover:text-primary/70 transition-colors"
+          >
+            商品一覧
+          </Link>
+          <Link
+            to="/about"
+            prefetch="intent"
+            className="pb-1 hover:text-primary/70 transition-colors"
+          >
+            APEXについて
+          </Link>
+          <Link
+            to="/pages/contact"
+            prefetch="intent"
+            className="pb-1 hover:text-primary/70 transition-colors"
+          >
+            お問い合わせ
+          </Link>
         </nav>
       </div>
       <div className="flex items-center gap-1">
@@ -297,14 +341,10 @@ function DesktopHeader({
           className="flex items-center gap-2"
         >
           <Input
-            className={
-              isHome
-                ? 'focus:border-contrast/20 dark:focus:border-primary/20'
-                : 'focus:border-primary/20'
-            }
+            className="focus:border-primary/20"
             type="search"
             variant="minisearch"
-            placeholder="Search"
+            placeholder="検索"
             name="q"
           />
           <button
@@ -407,95 +447,117 @@ function Badge({
   );
 }
 
-function Footer({menu}: {menu?: EnhancedMenu}) {
+function Footer() {
   const isHome = useIsHomePath();
-  const itemsCount = menu
-    ? menu?.items?.length + 1 > 4
-      ? 4
-      : menu?.items?.length + 1
-    : [];
+  const currentYear = new Date().getFullYear();
 
   return (
     <Section
       divider={isHome ? 'none' : 'top'}
       as="footer"
       role="contentinfo"
-      className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12 md:gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-${itemsCount}
-        bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
+      className={`w-full py-12 px-6 md:px-8 lg:px-12 bg-black text-white border-t border-white/10`}
     >
-      <FooterMenu menu={menu} />
-      <CountrySelector />
-      <div
-        className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
-      >
-        &copy; {new Date().getFullYear()} / Shopify, Inc. Hydrogen is an MIT
-        Licensed Open Source project.
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+        <div className="col-span-1 md:col-span-2">
+          <Link to="/" className="inline-block mb-6">
+            <h2 className="text-2xl font-bold tracking-widest uppercase font-serif">
+              APEX TOYS
+            </h2>
+          </Link>
+          <p className="text-gray-400 text-sm leading-relaxed max-w-md">
+            APEX TOYSは、ハイクオリティなフィギュアとコレクターズアイテムを提供する専門ブランドです。
+            情熱と技術を注ぎ込み、キャラクターの魅力を最大限に引き出した製品をお届けします。
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm">
+            ナビゲーション
+          </h3>
+          <ul className="space-y-3 text-sm text-gray-400">
+            <li>
+              <Link to="/" className="hover:text-white transition-colors">
+                ホーム
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/collections/all"
+                className="hover:text-white transition-colors"
+              >
+                商品一覧
+              </Link>
+            </li>
+            <li>
+              <Link to="/about" className="hover:text-white transition-colors">
+                APEXについて
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/pages/contact"
+                className="hover:text-white transition-colors"
+              >
+                お問い合わせ
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm">
+            インフォメーション
+          </h3>
+          <ul className="space-y-3 text-sm text-gray-400">
+            <li>
+              <Link
+                to="/policies/privacy-policy"
+                className="hover:text-white transition-colors"
+              >
+                プライバシーポリシー
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/policies/terms-of-service"
+                className="hover:text-white transition-colors"
+              >
+                利用規約
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/policies/shipping-policy"
+                className="hover:text-white transition-colors"
+              >
+                配送ポリシー
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/policies/refund-policy"
+                className="hover:text-white transition-colors"
+              >
+                返金ポリシー
+              </Link>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+        <p>&copy; {currentYear} APEX TOYS. All rights reserved.</p>
+        <div className="flex gap-4">
+          <Link
+            to="/policies/legal-notice"
+            className="hover:text-white transition-colors"
+          >
+            特定商取引法に基づく表記
+          </Link>
+        </div>
       </div>
     </Section>
   );
 }
 
-function FooterLink({item}: {item: ChildEnhancedMenuItem}) {
-  if (item.to.startsWith('http')) {
-    return (
-      <a href={item.to} target={item.target} rel="noopener noreferrer">
-        {item.title}
-      </a>
-    );
-  }
-
-  return (
-    <Link to={item.to} target={item.target} prefetch="intent">
-      {item.title}
-    </Link>
-  );
-}
-
-function FooterMenu({menu}: {menu?: EnhancedMenu}) {
-  const styles = {
-    section: 'grid gap-4',
-    nav: 'grid gap-2 pb-6',
-  };
-
-  return (
-    <>
-      {(menu?.items || []).map((item) => (
-        <section key={item.id} className={styles.section}>
-          <Disclosure>
-            {({open}) => (
-              <>
-                <Disclosure.Button className="text-left md:cursor-default">
-                  <Heading className="flex justify-between" size="lead" as="h3">
-                    {item.title}
-                    {item?.items?.length > 0 && (
-                      <span className="md:hidden">
-                        <IconCaret direction={open ? 'up' : 'down'} />
-                      </span>
-                    )}
-                  </Heading>
-                </Disclosure.Button>
-                {item?.items?.length > 0 ? (
-                  <div
-                    className={`${
-                      open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
-                    } overflow-hidden transition-all duration-300`}
-                  >
-                    <Suspense data-comment="This suspense fixes a hydration bug in Disclosure.Panel with static prop">
-                      <Disclosure.Panel static>
-                        <nav className={styles.nav}>
-                          {item.items.map((subItem: ChildEnhancedMenuItem) => (
-                            <FooterLink key={subItem.id} item={subItem} />
-                          ))}
-                        </nav>
-                      </Disclosure.Panel>
-                    </Suspense>
-                  </div>
-                ) : null}
-              </>
-            )}
-          </Disclosure>
-        </section>
-      ))}
-    </>
-  );
-}
