@@ -57,8 +57,8 @@ export function PageLayout({children, layout}: LayoutProps) {
             Skip to content
           </a>
         </div>
-        {headerMenu && layout?.shop.name && !isProductsPage && (
-          <Header title={layout.shop.name} menu={headerMenu} />
+        {layout?.shop.name && !isProductsPage && (
+          <Header title={layout.shop.name} menu={headerMenu ?? undefined} />
         )}
         <main role="main" id="mainContent" className="flex-grow">
           {children}

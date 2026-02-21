@@ -45,8 +45,7 @@ export default function Homepage() {
               システム起動 // Ver. 2.0
             </h2>
             
-            <div className="w-full flex flex-col lg:flex-row items-baseline lg:items-end justify-between gap-4 lg:gap-12">
-              {/* Left: APEX TOYS */}
+            <div className="w-full">
               <h1
                 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter uppercase glitch-text leading-none"
                 data-text="APEX TOYS"
@@ -54,15 +53,6 @@ export default function Homepage() {
               >
                 APEX TOYS
               </h1>
-
-              {/* Right: APEX INNOVATION */}
-              <h2
-                className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter uppercase text-gray-500 leading-none"
-                style={{fontFamily: '"Orbitron", sans-serif'}}
-              >
-                APEX
-                <br className="hidden lg:block" /> INNOVATION
-              </h2>
             </div>
 
             <p className="max-w-xl text-gray-300 text-lg md:text-xl leading-relaxed mt-6 border-l-2 border-accent pl-6">

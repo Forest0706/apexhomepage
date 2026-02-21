@@ -95,15 +95,43 @@ export async function loader(args: LoaderFunctionArgs) {
   });
 }
 
+/** 开发环境下 API 失败时使用的降级布局，便于本地预览 */
+function getFallbackLayout() {
+  return {
+    shop: {
+      id: 'gid://shopify/Shop/1',
+      name: 'Apex Toys',
+      description: 'Apex Toys Store',
+      primaryDomain: {url: 'https://localhost:3000'},
+      brand: {logo: null},
+    },
+    headerMenu: undefined,
+    footerMenu: undefined,
+  };
+}
+
 /**
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
 async function loadCriticalData({request, context}: LoaderFunctionArgs) {
-  const [layout] = await Promise.all([
-    getLayoutData(context),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  let layout;
+  try {
+    const [layoutResult] = await Promise.all([
+      getLayoutData(context),
+      // Add other queries here, so that they are loaded in parallel
+    ]);
+    layout = layoutResult;
+  } catch (e) {
+    if (process.env.NODE_ENV === 'development') {
+      // 本地开发时 API 可能不可用（如演示凭证失效），使用降级布局保证页面能打开
+      // eslint-disable-next-line no-console
+      console.warn('[root] getLayoutData failed, using fallback layout:', e);
+      layout = getFallbackLayout();
+    } else {
+      throw e;
+    }
+  }
 
   const seo = seoPayload.root({shop: layout.shop, url: request.url});
 
@@ -139,8 +167,15 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
   };
 }
 
-export const meta = ({data}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(data!.seo as SeoConfig);
+export const meta = ({data, location}: MetaArgs<typeof loader>) => {
+  const seo = data?.seo;
+  if (!seo) {
+    return getSeoMeta({
+      title: 'Apex Toys',
+      url: location?.pathname ?? '',
+    } as SeoConfig);
+  }
+  return getSeoMeta(seo as SeoConfig);
 };
 
 function Layout({children}: {children?: React.ReactNode}) {
