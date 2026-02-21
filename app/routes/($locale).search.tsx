@@ -111,7 +111,7 @@ export default function Search() {
         <Section>
           <Pagination connection={products}>
             {({nodes, isLoading, NextLink, PreviousLink}) => {
-              const itemsMarkup = nodes.map((product, i) => (
+              const itemsMarkup = nodes.map((product: any, i: number) => (
                 <ProductCard
                   key={product.id}
                   product={product}

@@ -63,7 +63,6 @@ export default function Product() {
       {/* Main Content */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-0 md:px-6 lg:px-8 pt-20 pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
           {/* 左側: 画像ギャラリー (スクロール追従なし、メインコンテンツ) */}
           <div className="lg:col-span-8 flex flex-col gap-4">
             {product.images.map((image, index) => (
@@ -87,7 +86,6 @@ export default function Product() {
           {/* 右側: 商品情報 (スクロール追従) */}
           <div className="lg:col-span-4 relative">
             <div className="sticky top-24 space-y-8 p-6 bg-[#0a0a0a]/50 backdrop-blur-sm border border-white/5 rounded-lg">
-              
               <div className="space-y-2 border-l-2 border-accent pl-4">
                 <h2 className="text-accent font-mono text-xs tracking-[0.3em] uppercase">
                   {product.vendor}
@@ -108,7 +106,9 @@ export default function Product() {
 
               {/* スペック表 (コンパクト) */}
               <div className="py-4 border-t border-white/10">
-                <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest mb-4">SPECIFICATIONS</h3>
+                <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest mb-4">
+                  SPECIFICATIONS
+                </h3>
                 <div className="grid grid-cols-2 gap-y-4 gap-x-4 text-xs">
                   <div>
                     <div className="text-gray-500 mb-1">Scale</div>
@@ -124,7 +124,6 @@ export default function Product() {
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -134,25 +133,27 @@ export default function Product() {
       <div className="fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-md border-t border-white/10 z-50 py-4 px-6 md:px-12">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="hidden md:flex flex-col">
-            <span className="text-xs text-gray-400 uppercase tracking-wider">Total Price</span>
+            <span className="text-xs text-gray-400 uppercase tracking-wider">
+              Total Price
+            </span>
             <span className="text-xl font-bold font-mono">
               {formatMoney(product.price.amount, product.price.currencyCode)}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-6 w-full md:w-auto">
-             <div className="md:hidden flex flex-col mr-auto">
-                <span className="text-lg font-bold font-mono">
-                  {formatMoney(product.price.amount, product.price.currencyCode)}
-                </span>
-             </div>
-              <Button
-                variant="primary"
-                className="flex-1 md:flex-none px-8 py-3 bg-accent hover:bg-white hover:text-black text-white font-bold tracking-widest transition-all duration-300 shadow-[0_0_15px_rgba(var(--color-accent),0.5)]"
-                onClick={() => alert('カートに追加しました (デモ)')}
-              >
-                カートに入れる
-              </Button>
+            <div className="md:hidden flex flex-col mr-auto">
+              <span className="text-lg font-bold font-mono">
+                {formatMoney(product.price.amount, product.price.currencyCode)}
+              </span>
+            </div>
+            <Button
+              variant="primary"
+              className="flex-1 md:flex-none px-8 py-3 bg-accent hover:bg-white hover:text-black text-white font-bold tracking-widest transition-all duration-300 shadow-[0_0_15px_rgba(var(--color-accent),0.5)]"
+              onClick={() => alert('カートに追加しました (デモ)')}
+            >
+              カートに入れる
+            </Button>
           </div>
         </div>
       </div>

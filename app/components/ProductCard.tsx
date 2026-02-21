@@ -3,21 +3,39 @@ import clsx from 'clsx';
 import {Text} from '~/components/Text';
 import {Link} from '~/components/Link';
 
-// Local product type definition
 type LocalProduct = {
   id: string;
   title: string;
   handle: string;
-  publishedAt: string;
+  publishedAt?: string;
   vendor?: string;
-  price: {
+  price?: {
     amount: string;
     currencyCode: string;
   };
-  images: string[];
+  images?: string[];
   isNew?: boolean;
   isPreorder?: boolean;
+  variants?: {
+    nodes: Array<{
+      id: string;
+      image?: {url: string; altText?: string | null} | null;
+      price: {amount: string; currencyCode: string};
+    }>;
+  };
 };
+
+function getProductImage(product: LocalProduct): string | undefined {
+  if (product.images?.length) return product.images[0];
+  return product.variants?.nodes?.[0]?.image?.url;
+}
+
+function getProductPrice(product: LocalProduct) {
+  if (product.price) return product.price;
+  const variant = product.variants?.nodes?.[0];
+  if (variant) return variant.price;
+  return {amount: '0', currencyCode: 'JPY'};
+}
 
 export function ProductCard({
   product,
@@ -25,17 +43,18 @@ export function ProductCard({
   className,
   loading,
   onClick,
+  quickAdd,
 }: {
   product: LocalProduct;
   label?: string;
   className?: string;
   loading?: HTMLImageElement['loading'];
   onClick?: () => void;
+  quickAdd?: boolean;
 }) {
-  const {images, price} = product;
-  const image = images?.[0];
+  const image = getProductImage(product);
+  const price = getProductPrice(product);
 
-  // Simple formatting helper
   const formatMoney = (amount: string, currency: string) => {
     return new Intl.NumberFormat('ja-JP', {
       style: 'currency',

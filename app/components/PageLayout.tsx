@@ -192,7 +192,6 @@ function MenuMobileNav({
           </Text>
         </Link>
       </span>
-
     </nav>
   );
 }
@@ -315,7 +314,6 @@ function DesktopHeader({
           >
             APEXについて
           </Link>
-
         </nav>
       </div>
       <div className="flex items-center gap-1">
@@ -448,7 +446,8 @@ function Footer() {
             <Logo isHome={isHome} />
           </Link>
           <p className="text-gray-400 text-sm leading-relaxed max-w-md">
-            APEX TOYSは、ハイクオリティなフィギュアとコレクターズアイテムを提供する専門ブランドです。
+            APEX
+            TOYSは、ハイクオリティなフィギュアとコレクターズアイテムを提供する専門ブランドです。
             情熱と技術を注ぎ込み、キャラクターの魅力を最大限に引き出した製品をお届けします。
           </p>
         </div>
@@ -476,7 +475,6 @@ function Footer() {
                 APEXについて
               </Link>
             </li>
-
           </ul>
         </div>
 
@@ -535,4 +533,3 @@ function Footer() {
     </Section>
   );
 }
-
