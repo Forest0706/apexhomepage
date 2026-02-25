@@ -60,13 +60,13 @@ export function CountrySelector() {
       </Heading>
       <div className="relative">
         <details
-          className="absolute w-full border rounded border-contrast/30 dark:border-white open:round-b-none overflow-clip"
+          className="absolute w-full border rounded border-gray-200 open:round-b-none overflow-clip"
           ref={closeRef}
         >
           <summary className="flex items-center justify-between w-full px-4 py-3 cursor-pointer">
             {selectedLocale.label}
           </summary>
-          <div className="w-full overflow-auto border-t border-contrast/30 dark:border-white bg-contrast/30 max-h-36">
+          <div className="w-full overflow-auto border-t border-gray-200 bg-gray-50 max-h-36">
             {countries &&
               Object.keys(countries).map((countryPath) => {
                 const countryLocale = countries[countryPath];

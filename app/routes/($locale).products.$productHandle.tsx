@@ -47,28 +47,27 @@ export default function Product() {
   };
 
   return (
-    <div className="bg-black text-white min-h-screen relative">
-      {/* Fixed Background (Always visible) */}
+    <div className="bg-white text-gray-900 min-h-screen relative">
+      {/* Fixed Background */}
       <div
         className="fixed inset-0 w-full h-full z-0 bg-cover bg-center pointer-events-none"
         style={{
           backgroundImage: 'url("/curtain-bg.svg")',
-          backgroundColor: '#000',
+          backgroundColor: '#fafafa',
         }}
       />
 
-      {/* Opening Curtain (Black overlay that lifts up) */}
-      <div className="fixed top-0 left-0 w-full h-full bg-black z-50 curtain-lift pointer-events-none" />
+      {/* Opening Curtain */}
+      <div className="fixed top-0 left-0 w-full h-full bg-white z-50 curtain-lift pointer-events-none" />
 
       {/* Main Content */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-0 md:px-6 lg:px-8 pt-20 pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* 左側: 画像ギャラリー (スクロール追従なし、メインコンテンツ) */}
           <div className="lg:col-span-8 flex flex-col gap-4">
             {product.images.map((image, index) => (
               <div
                 key={index}
-                className="w-full bg-[#0a0a0a] rounded-sm overflow-hidden group relative"
+                className="w-full bg-gray-50 rounded-sm overflow-hidden group relative"
               >
                 <img
                   src={image}
@@ -76,16 +75,15 @@ export default function Product() {
                   className="w-full h-auto object-contain transition-transform duration-700 hover:scale-[1.02]"
                   loading={index < 2 ? 'eager' : 'lazy'}
                 />
-                <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur px-3 py-1 text-xs font-mono text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute bottom-4 right-4 bg-white/60 backdrop-blur px-3 py-1 text-xs font-mono text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                   IMG_0{index + 1}
                 </div>
               </div>
             ))}
           </div>
 
-          {/* 右側: 商品情報 (スクロール追従) */}
           <div className="lg:col-span-4 relative">
-            <div className="sticky top-24 space-y-8 p-6 bg-[#0a0a0a]/50 backdrop-blur-sm border border-white/5 rounded-lg">
+            <div className="sticky top-24 space-y-8 p-6 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg shadow-sm">
               <div className="space-y-2 border-l-2 border-accent pl-4">
                 <h2 className="text-accent font-mono text-xs tracking-[0.3em] uppercase">
                   {product.vendor}
@@ -94,32 +92,31 @@ export default function Product() {
                   {product.title}
                 </h1>
                 {product.subTitle && (
-                  <p className="text-sm text-gray-400 italic">
+                  <p className="text-sm text-gray-500 italic">
                     {product.subTitle}
                   </p>
                 )}
               </div>
 
-              <div className="prose prose-invert prose-sm text-gray-300 leading-relaxed">
+              <div className="prose prose-sm text-gray-600 leading-relaxed">
                 <p>{product.description}</p>
               </div>
 
-              {/* スペック表 (コンパクト) */}
-              <div className="py-4 border-t border-white/10">
-                <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest mb-4">
+              <div className="py-4 border-t border-gray-200">
+                <h3 className="text-xs font-mono text-gray-400 uppercase tracking-widest mb-4">
                   SPECIFICATIONS
                 </h3>
                 <div className="grid grid-cols-2 gap-y-4 gap-x-4 text-xs">
                   <div>
-                    <div className="text-gray-500 mb-1">Scale</div>
+                    <div className="text-gray-400 mb-1">Scale</div>
                     <div>{product.specs.scale || 'N/A'}</div>
                   </div>
                   <div>
-                    <div className="text-gray-500 mb-1">Height</div>
+                    <div className="text-gray-400 mb-1">Height</div>
                     <div>{product.specs.height || 'N/A'}</div>
                   </div>
                   <div className="col-span-2">
-                    <div className="text-gray-500 mb-1">Release Date</div>
+                    <div className="text-gray-400 mb-1">Release Date</div>
                     <div>{product.specs.releaseDate || 'TBD'}</div>
                   </div>
                 </div>
@@ -129,11 +126,11 @@ export default function Product() {
         </div>
       </div>
 
-      {/* フローティング購入バー (スマホ・PC共通) */}
-      <div className="fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-md border-t border-white/10 z-50 py-4 px-6 md:px-12">
+      {/* フローティング購入バー */}
+      <div className="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-md border-t border-gray-200 z-50 py-4 px-6 md:px-12">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="hidden md:flex flex-col">
-            <span className="text-xs text-gray-400 uppercase tracking-wider">
+            <span className="text-xs text-gray-500 uppercase tracking-wider">
               Total Price
             </span>
             <span className="text-xl font-bold font-mono">
@@ -149,7 +146,7 @@ export default function Product() {
             </div>
             <Button
               variant="primary"
-              className="flex-1 md:flex-none px-8 py-3 bg-accent hover:bg-white hover:text-black text-white font-bold tracking-widest transition-all duration-300 shadow-[0_0_15px_rgba(var(--color-accent),0.5)]"
+              className="flex-1 md:flex-none px-8 py-3 bg-accent hover:bg-gray-900 text-white font-bold tracking-widest transition-all duration-300 shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
               onClick={() => alert('カートに追加しました (デモ)')}
             >
               カートに入れる

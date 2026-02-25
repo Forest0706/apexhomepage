@@ -69,11 +69,21 @@ export function PageLayout({children, layout}: LayoutProps) {
   );
 }
 
-function Logo({isHome}: {isHome: boolean}) {
+function Logo({
+  isHome,
+  variant,
+}: {
+  isHome: boolean;
+  variant?: 'light' | 'dark';
+}) {
+  const logoSrc =
+    variant === 'light'
+      ? '/Apex Innovation White.png'
+      : '/默认用这个文件-APEX新logo-tm.png';
   return (
     <div className="flex items-center gap-2 font-bold font-serif text-2xl tracking-widest uppercase leading-none">
       <img
-        src="/Apex Innovation White.png"
+        src={logoSrc}
         alt="APEX TOYS"
         className="h-8 w-auto object-contain"
       />
@@ -216,7 +226,7 @@ function MobileHeader({
       role="banner"
       className={`${
         isHome
-          ? 'bg-contrast/80 text-primary shadow-darkHeader'
+          ? 'bg-contrast/80 text-primary shadow-lightHeader'
           : 'bg-contrast/80 text-primary'
       } flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`}
     >
@@ -282,7 +292,7 @@ function DesktopHeader({
       role="banner"
       className={`${
         isHome
-          ? 'bg-contrast/80 text-primary shadow-darkHeader'
+          ? 'bg-contrast/80 text-primary shadow-lightHeader'
           : 'bg-contrast/80 text-primary'
       } ${
         !isHome && y > 50 && ' shadow-lightHeader'
@@ -438,14 +448,14 @@ function Footer() {
       divider={isHome ? 'none' : 'top'}
       as="footer"
       role="contentinfo"
-      className={`w-full py-12 px-6 md:px-8 lg:px-12 bg-black text-white border-t border-white/10`}
+      className={`w-full py-12 px-6 md:px-8 lg:px-12 bg-gray-50 text-gray-800 border-t border-gray-200`}
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
         <div className="col-span-1 md:col-span-2">
           <Link to="/" className="inline-block mb-6" prefetch="intent">
             <Logo isHome={isHome} />
           </Link>
-          <p className="text-gray-400 text-sm leading-relaxed max-w-md">
+          <p className="text-gray-500 text-sm leading-relaxed max-w-md">
             APEX
             TOYSは、ハイクオリティなフィギュアとコレクターズアイテムを提供する専門ブランドです。
             情熱と技術を注ぎ込み、キャラクターの魅力を最大限に引き出した製品をお届けします。
@@ -453,25 +463,28 @@ function Footer() {
         </div>
 
         <div>
-          <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm">
+          <h3 className="text-gray-900 font-bold mb-4 uppercase tracking-wider text-sm">
             ナビゲーション
           </h3>
-          <ul className="space-y-3 text-sm text-gray-400">
+          <ul className="space-y-3 text-sm text-gray-500">
             <li>
-              <Link to="/" className="hover:text-white transition-colors">
+              <Link to="/" className="hover:text-gray-900 transition-colors">
                 ホーム
               </Link>
             </li>
             <li>
               <Link
                 to="/collections/all"
-                className="hover:text-white transition-colors"
+                className="hover:text-gray-900 transition-colors"
               >
                 商品一覧
               </Link>
             </li>
             <li>
-              <Link to="/about" className="hover:text-white transition-colors">
+              <Link
+                to="/about"
+                className="hover:text-gray-900 transition-colors"
+              >
                 APEXについて
               </Link>
             </li>
@@ -479,14 +492,14 @@ function Footer() {
         </div>
 
         <div>
-          <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm">
+          <h3 className="text-gray-900 font-bold mb-4 uppercase tracking-wider text-sm">
             インフォメーション
           </h3>
-          <ul className="space-y-3 text-sm text-gray-400">
+          <ul className="space-y-3 text-sm text-gray-500">
             <li>
               <Link
                 to="/policies/privacy-policy"
-                className="hover:text-white transition-colors"
+                className="hover:text-gray-900 transition-colors"
               >
                 プライバシーポリシー
               </Link>
@@ -494,7 +507,7 @@ function Footer() {
             <li>
               <Link
                 to="/policies/terms-of-service"
-                className="hover:text-white transition-colors"
+                className="hover:text-gray-900 transition-colors"
               >
                 利用規約
               </Link>
@@ -502,7 +515,7 @@ function Footer() {
             <li>
               <Link
                 to="/policies/shipping-policy"
-                className="hover:text-white transition-colors"
+                className="hover:text-gray-900 transition-colors"
               >
                 配送ポリシー
               </Link>
@@ -510,7 +523,7 @@ function Footer() {
             <li>
               <Link
                 to="/policies/refund-policy"
-                className="hover:text-white transition-colors"
+                className="hover:text-gray-900 transition-colors"
               >
                 返金ポリシー
               </Link>
@@ -519,12 +532,12 @@ function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+      <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-400">
         <p>&copy; {currentYear} APEX TOYS. All rights reserved.</p>
         <div className="flex gap-4">
           <Link
             to="/policies/legal-notice"
-            className="hover:text-white transition-colors"
+            className="hover:text-gray-900 transition-colors"
           >
             特定商取引法に基づく表記
           </Link>

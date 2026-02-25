@@ -70,7 +70,7 @@ export function ProductCard({
         prefetch="viewport"
       >
         <div className={clsx('grid gap-4', className)}>
-          <div className="card-image aspect-[4/5] bg-primary/5 relative group overflow-hidden">
+          <div className="card-image aspect-[4/5] bg-gray-100 relative group overflow-hidden rounded-lg">
             {image && (
               <img
                 src={image}
@@ -83,7 +83,7 @@ export function ProductCard({
               <Text
                 as="label"
                 size="fine"
-                className="absolute top-0 right-0 m-4 text-right text-notice font-bold bg-black/50 px-2 py-1 backdrop-blur-sm"
+                className="absolute top-0 right-0 m-4 text-right text-white font-bold bg-accent/90 px-2 py-1 backdrop-blur-sm rounded"
               >
                 {label}
               </Text>
@@ -91,13 +91,13 @@ export function ProductCard({
           </div>
           <div className="grid gap-1">
             <Text
-              className="w-full overflow-hidden whitespace-nowrap text-ellipsis font-bold text-white"
+              className="w-full overflow-hidden whitespace-nowrap text-ellipsis font-bold text-gray-900"
               as="h3"
             >
               {product.title}
             </Text>
             <div className="flex gap-4">
-              <Text className="flex gap-4 opacity-80 text-gray-400">
+              <Text className="flex gap-4 text-gray-500">
                 {formatMoney(price.amount, price.currencyCode)}
               </Text>
             </div>
