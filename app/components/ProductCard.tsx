@@ -1,9 +1,9 @@
 import clsx from 'clsx';
+import type {Product} from '@shopify/hydrogen/storefront-api-types';
 
 import {Text} from '~/components/Text';
 import {Link} from '~/components/Link';
 
-// Local product type definition
 type LocalProduct = {
   id: string;
   title: string;
@@ -17,7 +17,45 @@ type LocalProduct = {
   images: string[];
   isNew?: boolean;
   isPreorder?: boolean;
+  subTitle?: string;
 };
+
+type ProductType = LocalProduct | Product;
+
+interface ProductCardProps {
+  product: ProductType;
+  label?: string;
+  className?: string;
+  loading?: HTMLImageElement['loading'];
+  onClick?: () => void;
+}
+
+function getShopifyProductData(product: Product) {
+  const variant = product.variants.nodes[0];
+  return {
+    image: product.featuredImage?.url || variant?.image?.url,
+    title: product.title,
+    price: product.priceRange.minVariantPrice,
+    handle: product.handle,
+  };
+}
+
+function getLocalProductData(product: LocalProduct) {
+  return {
+    image: product.images?.[0],
+    title: product.title,
+    price: product.price,
+    handle: product.handle,
+  };
+}
+
+function formatMoney(amount: string | number, currency: string) {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat('ja-JP', {
+    style: 'currency',
+    currency,
+  }).format(numAmount);
+}
 
 export function ProductCard({
   product,
@@ -25,37 +63,23 @@ export function ProductCard({
   className,
   loading,
   onClick,
-}: {
-  product: LocalProduct;
-  label?: string;
-  className?: string;
-  loading?: HTMLImageElement['loading'];
-  onClick?: () => void;
-}) {
-  const {images, price} = product;
-  const image = images?.[0];
+}: ProductCardProps) {
+  const isShopify = 'priceRange' in product;
+  const productData = isShopify
+    ? getShopifyProductData(product as Product)
+    : getLocalProductData(product as LocalProduct);
 
-  // Simple formatting helper
-  const formatMoney = (amount: string, currency: string) => {
-    return new Intl.NumberFormat('ja-JP', {
-      style: 'currency',
-      currency,
-    }).format(parseFloat(amount));
-  };
+  const {image, title, price, handle} = productData;
 
   return (
     <div className="flex flex-col gap-2">
-      <Link
-        onClick={onClick}
-        to={`/products/${product.handle}`}
-        prefetch="viewport"
-      >
+      <Link onClick={onClick} to={`/products/${handle}`} prefetch="viewport">
         <div className={clsx('grid gap-4', className)}>
           <div className="card-image aspect-[4/5] bg-primary/5 relative group overflow-hidden">
             {image && (
               <img
                 src={image}
-                alt={product.title}
+                alt={title}
                 className="object-cover w-full h-full fadeIn transition-transform duration-500 group-hover:scale-105"
                 loading={loading}
               />
@@ -75,7 +99,7 @@ export function ProductCard({
               className="w-full overflow-hidden whitespace-nowrap text-ellipsis font-bold text-white"
               as="h3"
             >
-              {product.title}
+              {title}
             </Text>
             <div className="flex gap-4">
               <Text className="flex gap-4 opacity-80 text-gray-400">

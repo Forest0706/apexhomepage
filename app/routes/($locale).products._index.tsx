@@ -1,27 +1,80 @@
 import {useEffect, useRef} from 'react';
-import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import {getSeoMeta} from '@shopify/hydrogen';
+import {getSeoMeta, getPaginationVariables} from '@shopify/hydrogen';
 
 import {Link} from '~/components/Link';
 import {routeHeaders} from '~/data/cache';
 import {LOCAL_PRODUCTS} from '~/data/localProducts';
+import {ALL_PRODUCTS_QUERY} from '~/graphql/HomepageQueries';
 
 export const headers = routeHeaders;
 
-export async function loader(args: LoaderFunctionArgs) {
-  return json({
-    products: LOCAL_PRODUCTS,
-    seo: {
-      title: '商品一覧 | APEX TOYS',
-      description: 'ハイクオリティなフィギュアコレクション',
-    },
-  });
+export async function loader({
+  request,
+  context: {storefront},
+}: LoaderFunctionArgs) {
+  const paginationVariables = getPaginationVariables(request, {pageBy: 4});
+
+  try {
+    const {products} = await storefront.query(ALL_PRODUCTS_QUERY, {
+      variables: {
+        ...paginationVariables,
+        sortKey: 'CREATED_AT',
+        reverse: true,
+        country: storefront.i18n.country,
+        language: storefront.i18n.language,
+      },
+    });
+
+    return defer({
+      products: products.nodes,
+      pageInfo: products.pageInfo,
+      seo: {
+        title: '商品一覧 | APEX TOYS',
+        description: 'ハイQualitéなフィギュアコレクション',
+      },
+    });
+  } catch (error) {
+    return defer({
+      products: LOCAL_PRODUCTS,
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: '',
+        endCursor: '',
+      },
+      seo: {
+        title: '商品一覧 | APEX TOYS',
+        description: 'ハイQualitéなフィギュアコレクション',
+      },
+    });
+  }
 }
 
 export const meta = ({data}: {data: any}) => {
   return getSeoMeta(data.seo);
 };
+
+function getProductImage(product: any): string {
+  if (product.images) {
+    return product.images[0];
+  }
+  return (
+    product.featuredImage?.url || product.variants?.nodes?.[0]?.image?.url || ''
+  );
+}
+
+function getProductTitle(product: any): string {
+  return product.title;
+}
+
+function getProductSubtitle(product: any): string {
+  if (product.subTitle) {
+    return product.subTitle;
+  }
+  return product.vendor || '';
+}
 
 export default function AllProducts() {
   const {products} = useLoaderData<typeof loader>();
@@ -82,7 +135,7 @@ export default function AllProducts() {
       {/* Navigation Overlay */}
       <div className="fixed top-0 left-0 w-full h-20 bg-gradient-to-b from-black/80 to-transparent z-40 pointer-events-none" />
 
-      {products.map((product, index) => (
+      {products.map((product: any, index: number) => (
         <section
           key={product.id}
           ref={(el) => (observerRefs.current[index] = el)}
@@ -91,8 +144,8 @@ export default function AllProducts() {
           {/* Static Full Screen Image (No Zoom, No Parallax) */}
           <div className="absolute inset-0 z-0 flex items-center justify-center pb-32">
             <img
-              src={product.images[0]}
-              alt={product.title}
+              src={getProductImage(product)}
+              alt={getProductTitle(product)}
               className="w-full h-full md:h-[80vh] object-contain opacity-0 translate-y-[100px] transition-none"
               loading={index === 0 ? 'eager' : 'lazy'}
             />
@@ -104,10 +157,10 @@ export default function AllProducts() {
               COLLECTION 0{index + 1}
             </h2>
             <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight uppercase drop-shadow-lg">
-              {product.title}
+              {getProductTitle(product)}
             </h1>
             <p className="text-lg text-gray-300 max-w-2xl font-light">
-              {product.subTitle}
+              {getProductSubtitle(product)}
             </p>
 
             <Link
