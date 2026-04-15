@@ -31,11 +31,12 @@ interface ProductCardProps {
 }
 
 function getShopifyProductData(product: Product) {
-  const variant = product.variants.nodes[0];
+  const variant = product.variants?.nodes?.[0];
+  const price = product.priceRange?.minVariantPrice || variant?.price;
   return {
     image: product.featuredImage?.url || variant?.image?.url,
     title: product.title,
-    price: product.priceRange.minVariantPrice,
+    price: price || {amount: '0', currencyCode: 'JPY'},
     handle: product.handle,
   };
 }
@@ -103,7 +104,7 @@ export function ProductCard({
             </Text>
             <div className="flex gap-4">
               <Text className="flex gap-4 opacity-80 text-gray-400">
-                {formatMoney(price.amount, price.currencyCode)}
+                {price ? formatMoney(price.amount, price.currencyCode) : '¥0'}
               </Text>
             </div>
           </div>

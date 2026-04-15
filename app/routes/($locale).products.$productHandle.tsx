@@ -10,6 +10,7 @@ import {LOCAL_PRODUCTS} from '~/data/localProducts';
 import {PRODUCT_QUERY} from '~/graphql/ProductQueries';
 import {Text, Heading} from '~/components/Text';
 import {Button} from '~/components/Button';
+import {AddToCartButton} from '~/components/AddToCartButton';
 
 export const headers = routeHeaders;
 
@@ -58,6 +59,14 @@ function adaptShopifyProduct(product: ShopifyProduct) {
     product.images?.nodes?.map((img) => img.url) ||
     (product.featuredImage?.url ? [product.featuredImage.url] : []);
 
+  const variants =
+    product.variants?.nodes?.map((v) => ({
+      id: v.id,
+      title: v.title,
+      availableForSale: v.availableForSale,
+      price: v.price,
+    })) || [];
+
   return {
     id: product.id,
     handle: product.handle,
@@ -76,6 +85,7 @@ function adaptShopifyProduct(product: ShopifyProduct) {
       releaseDate: '',
     },
     tags: product.tags || [],
+    variants,
   };
 }
 
@@ -106,6 +116,7 @@ export async function loader({
       return defer({
         product: localProduct,
         isLocal: true,
+        variants: [],
         seo: {
           title: `${localProduct.title} | APEX TOYS`,
           description: localProduct.description,
@@ -118,6 +129,7 @@ export async function loader({
     return defer({
       product: adaptedProduct,
       isLocal: false,
+      variants: product.variants?.nodes || [],
       seo: {
         title: `${product.title} | APEX TOYS`,
         description: product.description,
@@ -133,6 +145,7 @@ export async function loader({
     return defer({
       product: localProduct,
       isLocal: true,
+      variants: [],
       seo: {
         title: `${localProduct.title} | APEX TOYS`,
         description: localProduct.description,
@@ -146,7 +159,7 @@ export const meta = ({data}: {data: any}) => {
 };
 
 export default function Product() {
-  const {product} = useLoaderData<typeof loader>();
+  const {product, isLocal, variants} = useLoaderData<typeof loader>();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // 兼容本地和 Shopify 数据格式
@@ -158,6 +171,11 @@ export default function Product() {
       currency,
     }).format(numAmount);
   };
+
+  // 获取第一个可用的 variant
+  const firstAvailableVariant = variants.find(
+    (v: {availableForSale?: boolean}) => v.availableForSale,
+  );
 
   return (
     <div className="bg-black text-white min-h-screen relative">
@@ -260,13 +278,25 @@ export default function Product() {
                 {formatMoney(product.price.amount, product.price.currencyCode)}
               </span>
             </div>
-            <Button
-              variant="primary"
-              className="flex-1 md:flex-none px-8 py-3 bg-accent hover:bg-white hover:text-black text-white font-bold tracking-widest transition-all duration-300 shadow-[0_0_15px_rgba(var(--color-accent),0.5)]"
-              onClick={() => alert('カートに追加しました (デモ)')}
-            >
-              カートに入れる
-            </Button>
+            {isLocal ? (
+              <Button
+                variant="primary"
+                className="flex-1 md:flex-none px-8 py-3 bg-accent hover:bg-white hover:text-black text-white font-bold tracking-widest transition-all duration-300 shadow-[0_0_15px_rgba(var(--color-accent),0.5)]"
+                onClick={() => alert('カートに追加しました (デモ)')}
+              >
+                カートに入れる
+              </Button>
+            ) : (
+              <AddToCartButton
+                lines={[
+                  {merchandiseId: firstAvailableVariant?.id, quantity: 1},
+                ]}
+                variant="primary"
+                className="flex-1 md:flex-none px-8 py-3 bg-accent hover:bg-white hover:text-black text-white font-bold tracking-widest transition-all duration-300 shadow-[0_0_15px_rgba(var(--color-accent),0.5)]"
+              >
+                カートに入れる
+              </AddToCartButton>
+            )}
           </div>
         </div>
       </div>
