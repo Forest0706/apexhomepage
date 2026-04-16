@@ -50,6 +50,19 @@ export const PRODUCT_QUERY = `#graphql
           }
         }
       }
+      releaseDate: metafield(namespace: "specs", key: "releaseDate") {
+        value
+        type
+      }
+      scale: metafield(namespace: "specs", key: "scale") {
+        value
+        type
+      }
+      height: metafield(namespace: "specs", key: "height") {
+        value
+        type
+      }
+
     }
   }
 ` as const;

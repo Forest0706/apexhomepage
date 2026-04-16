@@ -3,18 +3,28 @@ import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {getSeoMeta} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
-import clsx from 'clsx';
+
 
 import {routeHeaders} from '~/data/cache';
-import {LOCAL_PRODUCTS} from '~/data/localProducts';
 import {PRODUCT_QUERY} from '~/graphql/ProductQueries';
-import {Text, Heading} from '~/components/Text';
 import {Button} from '~/components/Button';
 import {AddToCartButton} from '~/components/AddToCartButton';
 
 export const headers = routeHeaders;
 
 type ShopifyProduct = {
+  releaseDate: {
+    value: string;
+    type: string;
+  };
+  scale: {
+    value: string;
+    type: string;
+  };
+  height: {
+    value: string;
+    type: string;
+  };
   id: string;
   title: string;
   handle: string;
@@ -80,9 +90,9 @@ function adaptShopifyProduct(product: ShopifyProduct) {
     },
     images,
     specs: {
-      scale: '',
-      height: '',
-      releaseDate: '',
+      scale: product.scale?.value,
+      height: product.height?.value,
+      releaseDate: product.releaseDate?.value,
     },
     tags: product.tags || [],
     variants,
@@ -105,25 +115,6 @@ export async function loader({
       },
     });
 
-    if (!product) {
-      // 尝试从本地数据获取
-      const localProduct = LOCAL_PRODUCTS.find(
-        (p) => p.handle === productHandle,
-      );
-      if (!localProduct) {
-        throw new Response('Product not found', {status: 404});
-      }
-      return defer({
-        product: localProduct,
-        isLocal: true,
-        variants: [],
-        seo: {
-          title: `${localProduct.title} | APEX TOYS`,
-          description: localProduct.description,
-        },
-      });
-    }
-
     const adaptedProduct = adaptShopifyProduct(product);
 
     return defer({
@@ -137,20 +128,6 @@ export async function loader({
     });
   } catch (error) {
     console.error('Product loader error:', error);
-    // 回退到本地数据
-    const localProduct = LOCAL_PRODUCTS.find((p) => p.handle === productHandle);
-    if (!localProduct) {
-      throw new Response('Product not found', {status: 404});
-    }
-    return defer({
-      product: localProduct,
-      isLocal: true,
-      variants: [],
-      seo: {
-        title: `${localProduct.title} | APEX TOYS`,
-        description: localProduct.description,
-      },
-    });
   }
 }
 
