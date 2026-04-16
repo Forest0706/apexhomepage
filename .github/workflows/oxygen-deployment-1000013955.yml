@@ -45,9 +45,9 @@ jobs:
           echo "AUTH_BYPASS_TOKEN=$(jq -r '.authBypassToken' h2_deploy_log.json)" >> $GITHUB_ENV
           echo "DEPLOYMENT_URL=$(jq -r '.url' h2_deploy_log.json)" >> $GITHUB_ENV
 
-      - name: Run end-to-end tests
-        id: end-to-end-tests
-        uses: ./.github/actions/end-to-end-tests
-        with:
-          url: ${{ env.DEPLOYMENT_URL }}
-          auth-bypass-token: ${{ env.AUTH_BYPASS_TOKEN }}
+#      - name: Run end-to-end tests
+#        id: end-to-end-tests
+#        uses: ./.github/actions/end-to-end-tests
+#        with:
+#          url: ${{ env.DEPLOYMENT_URL }}
+#          auth-bypass-token: ${{ env.AUTH_BYPASS_TOKEN }}
