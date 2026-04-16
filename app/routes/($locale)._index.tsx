@@ -42,7 +42,7 @@ function getProductLabel(product: any): string | undefined {
   if (tags.includes('isPreorder')) return '予約受付中';
   return undefined;
 }
-
+// 测试下
 export default function Homepage() {
   const {products} = useLoaderData<typeof loader>();
 
