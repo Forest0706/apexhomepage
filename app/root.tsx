@@ -77,7 +77,7 @@ export const links: LinksFunction = () => {
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
     {
       rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap',
+      href: 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Playfair+Display:wght@400;600;700&display=swap',
     },
   ];
 };

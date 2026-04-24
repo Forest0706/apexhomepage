@@ -2,36 +2,150 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Tokens */
-:root {
-  --color-primary: 250 250 250; /* Light Text */
-  --color-contrast: 20 20 23; /* Dark Background (Arctech style) */
-  --color-accent: 0 191 255; /* Cyan for Tech feel */
-  --font-size-fine: 0.75rem; /* text-xs */
-  --font-size-copy: 1rem; /* text-base */
-  --font-size-lead: 1.125rem; /* text-lg */
-  --font-size-heading: 2rem; /* text-2xl */
-  --font-size-display: 3rem; /* text-4xl */
-  --color-shop-pay: #5a31f4;
-  --shop-pay-button--width: 100%; /* Sets the width for the shop-pay-button web component */
-  --height-nav: 3rem;
-  --screen-height: 100vh;
-  --screen-height-dynamic: 100vh;
+/* Apex Toys Theme - Light Minimal */
+@layer base {
+  :root {
+    --apex-bg: 250 250 249;
+    --apex-section: 245 245 244;
+    --apex-card: 240 238 235;
+    --apex-accent: 156 163 175;
+    --apex-accent-warm: 168 162 158;
+    --apex-accent-dark: 120 113 108;
+    --apex-text: 41 37 36;
+    --apex-muted: 168 162 158;
+    --apex-border: 231 229 228;
+    --apex-red: 185 28 28;
+    
+    --color-primary: 41 37 36;
+    --color-contrast: 250 250 249;
+    --color-accent: 120 113 108;
+    
+    --font-size-fine: 0.75rem;
+    --font-size-copy: 1rem;
+    --font-size-lead: 1.125rem;
+    --font-size-heading: 2rem;
+    --font-size-display: 3rem;
+    --color-shop-pay: #5a31f4;
+    --shop-pay-button--width: 100%;
+    --height-nav: 5rem;
+    --screen-height: 100vh;
+    --screen-height-dynamic: 100vh;
 
-  @media (min-width: 32em) {
-    --height-nav: 4rem;
+    @media (min-width: 32em) {
+      --height-nav: 5rem;
+    }
+    @media (min-width: 48em) {
+      --height-nav: 5rem;
+      --font-size-heading: 2.25rem;
+      --font-size-display: 3.75rem;
+    }
+    @supports (height: 100svh) {
+      --screen-height: 100svh;
+    }
+    @supports (height: 100dvh) {
+      --screen-height-dynamic: 100dvh;
+    }
   }
-  @media (min-width: 48em) {
-    --height-nav: 6rem;
-    --font-size-heading: 2.25rem; /* text-4xl */
-    --font-size-display: 3.75rem; /* text-6xl */
+
+  body {
+    @apply bg-[#fafaf9] text-[#292524] antialiased;
+    font-family: 'Noto Sans JP', 'Helvetica Neue', Arial, sans-serif;
   }
-  @supports (height: 100svh) {
-    --screen-height: 100svh;
+
+  html {
+    scroll-padding-top: 6rem;
   }
-  @supports (height: 100dvh) {
-    --screen-height-dynamic: 100dvh;
+}
+
+/* Apex Custom Styles */
+.apex-gradient {
+  background: linear-gradient(135deg, #78716c 0%, #a8a29e 50%, #78716c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card-hover {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-8px);
+}
+
+.slide-up {
+  animation: slideUp 0.8s ease-out forwards;
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
   }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #78716c;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.hamburger-line {
+  transition: all 0.3s ease;
+}
+
+.menu-open .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.menu-open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-open .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+.mobile-menu {
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-menu.active {
+  transform: translateX(0);
+}
+
+.hero-bg {
+  background: radial-gradient(ellipse at center, rgba(168, 162, 158, 0.06) 0%, transparent 70%);
+}
+
+.tag-new {
+  background: #b91c1c;
+}
+
+.tag-limited {
+  background: #78716c;
+}
+
+.tag-hot {
+  background: #c2410c;
 }
 
 @keyframes fadeInAnimation {

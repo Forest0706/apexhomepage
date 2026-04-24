@@ -76,20 +76,25 @@ export function ProductCard({
     <div className="flex flex-col gap-2">
       <Link onClick={onClick} to={`/products/${handle}`} prefetch="viewport">
         <div className={clsx('grid gap-4', className)}>
-          <div className="card-image aspect-[4/5] bg-primary/5 relative group overflow-hidden">
+          <div className="card-image aspect-[3/4] bg-[rgb(var(--apex-card))] relative group overflow-hidden rounded-sm">
             {image && (
               <img
                 src={image}
                 alt={title}
-                className="object-cover w-full h-full fadeIn transition-transform duration-500 group-hover:scale-105"
+                className="object-cover w-full h-full fadeIn transition-transform duration-700 group-hover:scale-108"
                 loading={loading}
               />
             )}
+            <div className="card-overlay absolute inset-0 bg-white/70 opacity-0 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm">
+              <span className="px-8 py-3 border border-[rgb(var(--apex-accent-dark))] text-[rgb(var(--apex-accent-dark))] text-sm tracking-widest uppercase">
+                View Details
+              </span>
+            </div>
             {label && (
               <Text
                 as="label"
                 size="fine"
-                className="absolute top-0 right-0 m-4 text-right text-notice font-bold bg-black/50 px-2 py-1 backdrop-blur-sm"
+                className="absolute top-4 left-4 text-white text-xs font-bold tracking-wider uppercase bg-[rgb(var(--apex-red))] px-3 py-1"
               >
                 {label}
               </Text>
@@ -97,16 +102,14 @@ export function ProductCard({
           </div>
           <div className="grid gap-1">
             <Text
-              className="w-full overflow-hidden whitespace-nowrap text-ellipsis font-bold text-white"
+              className="w-full overflow-hidden whitespace-nowrap text-[rgb(var(--apex-text))] font-medium"
               as="h3"
             >
               {title}
             </Text>
-            <div className="flex gap-4">
-              <Text className="flex gap-4 opacity-80 text-gray-400">
-                {price ? formatMoney(price.amount, price.currencyCode) : '¥0'}
-              </Text>
-            </div>
+            <Text className="flex gap-4 text-[rgb(var(--apex-accent-dark))] font-serif text-xl">
+              {price ? formatMoney(price.amount, price.currencyCode) : '¥0'}
+            </Text>
           </div>
         </div>
       </Link>
