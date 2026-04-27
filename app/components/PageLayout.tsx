@@ -1,36 +1,19 @@
 import {
   useParams,
-  Form,
   Await,
   useRouteLoaderData,
   useLocation,
+  Link,
 } from '@remix-run/react';
-import useWindowScroll from 'react-use/esm/useWindowScroll';
-import {Disclosure} from '@headlessui/react';
-import {Suspense, useEffect, useMemo} from 'react';
+import {Suspense, useMemo} from 'react';
 import {CartForm} from '@shopify/hydrogen';
 
 import {type LayoutQuery} from 'storefrontapi.generated';
-import {Text, Heading, Section} from '~/components/Text';
-import {Link} from '~/components/Link';
+import {Section, Text, Heading} from '~/components/Text';
 import {Cart} from '~/components/Cart';
 import {CartLoading} from '~/components/CartLoading';
-import {Input} from '~/components/Input';
 import {Drawer, useDrawer} from '~/components/Drawer';
-import {CountrySelector} from '~/components/CountrySelector';
-import {
-  IconMenu,
-  IconCaret,
-  IconLogin,
-  IconAccount,
-  IconBag,
-  IconSearch,
-} from '~/components/Icon';
-import {
-  type EnhancedMenu,
-  type ChildEnhancedMenuItem,
-  useIsHomePath,
-} from '~/lib/utils';
+import {type EnhancedMenu, useIsHomePath} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
 import type {RootLoader} from '~/root';
@@ -46,7 +29,7 @@ type LayoutProps = {
 export function PageLayout({children, layout}: LayoutProps) {
   const {headerMenu, footerMenu} = layout || {};
   const location = useLocation();
-  const isProductsPage =
+  const hideLayout =
     location.pathname === '/products' || location.pathname === '/products/';
 
   return (
@@ -57,26 +40,34 @@ export function PageLayout({children, layout}: LayoutProps) {
             Skip to content
           </a>
         </div>
-        {layout?.shop.name && !isProductsPage && (
+        {layout?.shop.name && (
           <Header title={layout.shop.name} menu={headerMenu ?? undefined} />
         )}
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
       </div>
-      {!isProductsPage && <Footer />}
+      {!hideLayout && <Footer />}
     </>
   );
 }
 
 function Logo({isHome}: {isHome: boolean}) {
   return (
-    <div className="flex items-center gap-2 font-bold font-serif text-2xl tracking-widest uppercase leading-none">
-      <img
-        src="/Apex Innovation White.png"
-        alt="APEX TOYS"
-        className="h-8 w-auto object-contain"
-      />
+    <div className="flex items-center space-x-3">
+      <div className="w-10 h-10 border border-[#78716c]/40 rounded-sm flex items-center justify-center bg-[rgb(var(--apex-text))]">
+        <span className="text-white font-serif text-lg font-bold tracking-tight">
+          A
+        </span>
+      </div>
+      <div className="flex flex-col">
+        <span className="text-xl font-serif font-bold tracking-widest leading-none">
+          APEX
+        </span>
+        <span className="text-[10px] tracking-[0.25em] text-[#a8a29e] uppercase leading-none mt-0.5">
+          TOYS
+        </span>
+      </div>
     </div>
   );
 }
@@ -201,58 +192,33 @@ function MobileHeader({
   openCart: () => void;
   openMenu: () => void;
 }) {
-  // useHeaderStyleFix(containerStyle, setContainerStyle, isHome);
-
   const params = useParams();
 
   return (
     <header
       role="banner"
-      className={`${
-        isHome
-          ? 'bg-contrast/80 text-primary shadow-darkHeader'
-          : 'bg-contrast/80 text-primary'
-      } flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`}
+      className="flex lg:hidden fixed top-0 left-0 right-0 z-50 h-20 bg-white/80 backdrop-blur-md border-b border-[#e7e5e4]"
     >
-      <div className="flex items-center justify-start w-full gap-4">
-        <button
-          onClick={openMenu}
-          className="relative flex items-center justify-center w-8 h-8"
-        >
-          <IconMenu />
-        </button>
-        <Form
-          method="get"
-          action={params.locale ? `/${params.locale}/search` : '/search'}
-          className="items-center gap-2 sm:flex"
-        >
-          <button
-            type="submit"
-            className="relative flex items-center justify-center w-8 h-8"
-          >
-            <IconSearch />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full w-full flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={openMenu} className="flex flex-col space-y-1.5 p-2">
+            <span className="hamburger-line w-6 h-[1.5px] bg-[#292524] block" />
+            <span className="hamburger-line w-6 h-[1.5px] bg-[#292524] block" />
+            <span className="hamburger-line w-6 h-[1.5px] bg-[#292524] block" />
           </button>
-          <Input
-            className="focus:border-primary/20"
-            type="search"
-            variant="minisearch"
-            placeholder="検索"
-            name="q"
-          />
-        </Form>
-      </div>
+        </div>
 
-      <Link
-        className="flex items-center self-stretch leading-[3rem] md:leading-[4rem] justify-center flex-grow w-full h-full"
-        to="/"
-        prefetch="intent"
-      >
-        <Logo isHome={isHome} />
-      </Link>
+        <Link
+          className="flex items-center justify-center"
+          to="/"
+          prefetch="intent"
+        >
+          <Logo isHome={isHome} />
+        </Link>
 
-      <div className="flex items-center justify-end w-full gap-4">
-        <AccountLink className="relative flex items-center justify-center w-8 h-8" />
-        <CartCount isHome={isHome} openCart={openCart} />
+        <div className="flex items-center gap-4">
+          <CartCount isHome={isHome} openCart={openCart} />
+        </div>
       </div>
     </header>
   );
@@ -270,68 +236,72 @@ function DesktopHeader({
   title: string;
 }) {
   const params = useParams();
-  const {y} = useWindowScroll();
   return (
     <header
       role="banner"
-      className={`${
-        isHome
-          ? 'bg-contrast/80 text-primary shadow-darkHeader'
-          : 'bg-contrast/80 text-primary'
-      } ${
-        !isHome && y > 50 && ' shadow-lightHeader'
-      } hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`}
+      className="hidden lg:block fixed top-0 left-0 right-0 z-50 h-20 bg-white/80 backdrop-blur-md border-b border-[#e7e5e4]"
     >
-      <div className="flex gap-12 items-center">
-        <Link to="/" prefetch="intent">
-          <Logo isHome={isHome} />
-        </Link>
-        <nav className="flex gap-8 items-center">
-          <Link
-            to="/"
-            prefetch="intent"
-            className="pb-1 hover:text-primary/70 transition-colors"
-          >
-            ホーム
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="flex items-center justify-between h-full gap-8">
+          <Link to="/" prefetch="intent">
+            <Logo isHome={isHome} />
           </Link>
-          <Link
-            to="/collections/all"
-            prefetch="intent"
-            className="pb-1 hover:text-primary/70 transition-colors"
-          >
-            商品一覧
-          </Link>
-          <Link
-            to="/about"
-            prefetch="intent"
-            className="pb-1 hover:text-primary/70 transition-colors"
-          >
-            APEXについて
-          </Link>
-        </nav>
-      </div>
-      <div className="flex items-center gap-1">
-        <Form
-          method="get"
-          action={params.locale ? `/${params.locale}/search` : '/search'}
-          className="flex items-center gap-2"
-        >
-          <Input
-            className="focus:border-primary/20"
-            type="search"
-            variant="minisearch"
-            placeholder="検索"
-            name="q"
-          />
-          <button
-            type="submit"
-            className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
-          >
-            <IconSearch />
-          </button>
-        </Form>
-        <AccountLink className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5" />
-        <CartCount isHome={isHome} openCart={openCart} />
+          <nav className="flex gap-10 items-center">
+            <Link
+              to="/"
+              prefetch="intent"
+              className="nav-link text-sm tracking-widest uppercase text-[#a8a29e] hover:text-[#292524] transition-colors"
+            >
+              ホーム
+            </Link>
+            {/*<Link*/}
+            {/*  to="/collections/all"*/}
+            {/*  prefetch="intent"*/}
+            {/*  className="nav-link text-sm tracking-widest uppercase text-[#a8a29e] hover:text-[#292524] transition-colors"*/}
+            {/*>*/}
+            {/*  作品*/}
+            {/*</Link>*/}
+            <Link
+              to="/#series"
+              prefetch="intent"
+              className="nav-link text-sm tracking-widest uppercase text-[#a8a29e] hover:text-[#292524] transition-colors"
+            >
+              シリーズ
+            </Link>
+            <Link
+              to="/#about"
+              prefetch="intent"
+              className="nav-link text-sm tracking-widest uppercase text-[#a8a29e] hover:text-[#292524] transition-colors"
+            >
+              会社概要
+            </Link>
+            <Link
+              to="/#contact"
+              prefetch="intent"
+              className="nav-link text-sm tracking-widest uppercase text-[#a8a29e] hover:text-[#292524] transition-colors"
+            >
+              お問い合わせ
+            </Link>
+          </nav>
+          <div className="flex items-center gap-6">
+            <button className="text-[#a8a29e] hover:text-[#78716c] transition-colors">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </button>
+            <CartCount isHome={isHome} openCart={openCart} />
+          </div>
+        </div>
       </div>
     </header>
   );
@@ -391,16 +361,24 @@ function Badge({
   const BadgeCounter = useMemo(
     () => (
       <>
-        <IconBag />
-        <div
-          className={`${
-            dark
-              ? 'text-primary bg-contrast dark:text-contrast dark:bg-primary'
-              : 'text-contrast bg-primary'
-          } absolute bottom-1 right-1 text-[0.625rem] font-medium subpixel-antialiased h-3 min-w-[0.75rem] flex items-center justify-center leading-none text-center rounded-full w-auto px-[0.125rem] pb-px`}
+        <svg
+          className="w-5 h-5 text-[#a8a29e]"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
         >
-          <span>{count || 0}</span>
-        </div>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+          />
+        </svg>
+        {count > 0 && (
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#b91c1c] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            {count > 9 ? '9+' : count}
+          </div>
+        )}
       </>
     ),
     [count, dark],
@@ -409,14 +387,14 @@ function Badge({
   return isHydrated ? (
     <button
       onClick={openCart}
-      className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
+      className="relative flex items-center justify-center w-8 h-8"
     >
       {BadgeCounter}
     </button>
   ) : (
     <Link
       to="/cart"
-      className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
+      className="relative flex items-center justify-center w-8 h-8"
     >
       {BadgeCounter}
     </Link>
@@ -428,102 +406,126 @@ function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <Section
-      divider={isHome ? 'none' : 'top'}
-      as="footer"
-      role="contentinfo"
-      className={`w-full py-12 px-6 md:px-8 lg:px-12 bg-black text-white border-t border-white/10`}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-        <div className="col-span-1 md:col-span-2">
-          <Link to="/" className="inline-block mb-6" prefetch="intent">
-            <Logo isHome={isHome} />
-          </Link>
-          <p className="text-gray-400 text-sm leading-relaxed max-w-md">
-            APEX
-            TOYSは、ハイクオリティなフィギュアとコレクターズアイテムを提供する専門ブランドです。
-            情熱と技術を注ぎ込み、キャラクターの魅力を最大限に引き出した製品をお届けします。
+    <footer className="bg-[#f5f5f4] pt-16 pb-10 border-t border-[#e7e5e4]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+          <div>
+            <Link
+              to="/"
+              className="flex items-center space-x-3 mb-6"
+              prefetch="intent"
+            >
+              <div className="w-8 h-8 border border-[#78716c]/40 rounded-sm flex items-center justify-center bg-[#292524]">
+                <span className="text-white font-serif text-sm font-bold">
+                  A
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-serif font-bold tracking-widest leading-none">
+                  APEX
+                </span>
+                <span className="text-[9px] tracking-[0.2em] text-[#a8a29e] uppercase leading-none mt-0.5">
+                  TOYS
+                </span>
+              </div>
+            </Link>
+            <p className="text-[#a8a29e] text-sm leading-relaxed font-light">
+              人気ゲームキャラクターの高品質フィギュアを制作。
+            </p>
+          </div>
+
+          <div>
+            <h4 className="text-[#292524] font-medium mb-4 tracking-wider uppercase text-xs">
+              シリーズ
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  to="/collections/all"
+                  className="text-[#a8a29e] hover:text-[#78716c] transition-colors text-sm"
+                >
+                  すべての作品
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-[#a8a29e] hover:text-[#78716c] transition-colors text-sm"
+                >
+                  新商品予告
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-[#a8a29e] hover:text-[#78716c] transition-colors text-sm"
+                >
+                  限定商品
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-[#292524] font-medium mb-4 tracking-wider uppercase text-xs">
+              サポート
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <a
+                  href="#"
+                  className="text-[#a8a29e] hover:text-[#78716c] transition-colors text-sm"
+                >
+                  購入ガイド
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-[#a8a29e] hover:text-[#78716c] transition-colors text-sm"
+                >
+                  アフターサービス
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-[#a8a29e] hover:text-[#78716c] transition-colors text-sm"
+                >
+                  よくある質問
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-[#292524] font-medium mb-4 tracking-wider uppercase text-xs">
+              お問い合わせ
+            </h4>
+            <p className="text-[#a8a29e] text-sm">contact@apex-toys.com</p>
+          </div>
+        </div>
+
+        <div className="border-t border-[#e7e5e4] pt-8 flex flex-col md:flex-row items-center justify-between">
+          <p className="text-[#a8a29e] text-xs tracking-wider">
+            &copy; {currentYear} Apex-Toys. All rights reserved.
           </p>
-        </div>
-
-        <div>
-          <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm">
-            ナビゲーション
-          </h3>
-          <ul className="space-y-3 text-sm text-gray-400">
-            <li>
-              <Link to="/" className="hover:text-white transition-colors">
-                ホーム
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/collections/all"
-                className="hover:text-white transition-colors"
-              >
-                商品一覧
-              </Link>
-            </li>
-            <li>
-              <Link to="/about" className="hover:text-white transition-colors">
-                APEXについて
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm">
-            インフォメーション
-          </h3>
-          <ul className="space-y-3 text-sm text-gray-400">
-            <li>
-              <Link
-                to="/policies/privacy-policy"
-                className="hover:text-white transition-colors"
-              >
-                プライバシーポリシー
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/policies/terms-of-service"
-                className="hover:text-white transition-colors"
-              >
-                利用規約
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/policies/shipping-policy"
-                className="hover:text-white transition-colors"
-              >
-                配送ポリシー
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/policies/refund-policy"
-                className="hover:text-white transition-colors"
-              >
-                返金ポリシー
-              </Link>
-            </li>
-          </ul>
+          <div className="flex space-x-6 mt-4 md:mt-0">
+            <a
+              href="#"
+              className="text-[#a8a29e] hover:text-[#292524] text-xs transition-colors"
+            >
+              プライバシーポリシー
+            </a>
+            <a
+              href="#"
+              className="text-[#a8a29e] hover:text-[#292524] text-xs transition-colors"
+            >
+              利用規約
+            </a>
+          </div>
         </div>
       </div>
-
-      <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
-        <p>&copy; {currentYear} APEX TOYS. All rights reserved.</p>
-        <div className="flex gap-4">
-          <Link
-            to="/policies/legal-notice"
-            className="hover:text-white transition-colors"
-          >
-            特定商取引法に基づく表記
-          </Link>
-        </div>
-      </div>
-    </Section>
+    </footer>
   );
 }

@@ -71,14 +71,17 @@ npx shopify hydrogen env pull
 每次 **push 到 GitHub** 就自动构建并部署到 Oxygen。
 
 1. **把仓库推到 GitHub**
+
    - 若还没推：在 GitHub 新建仓库，然后 `git remote add origin <url>`、`git push -u origin main`
 
 2. **在 Shopify 里连接 GitHub**
+
    - 管理后台 → 你的 **Headless/Hydrogen Storefront** → **部署 / Deployments**
    - 选择 **连接 GitHub**，授权并选中 `Apex-homepage/apexhomepage`（或你的仓库名）
    - 连接成功后，Shopify 会为这个 Storefront 生成 **Deployment token**
 
 3. **在 GitHub 配置 Secret**
+
    - 仓库 → **Settings → Secrets and variables → Actions**
    - 新增 Secret：
      - **Name**: `OXYGEN_DEPLOYMENT_TOKEN_你的StorefrontID`
@@ -86,9 +89,10 @@ npx shopify hydrogen env pull
      - **Value**: 在 Shopify 部署页面复制给你的 **Deployment token**
 
 4. **更新 GitHub Actions 工作流（重要）**
+
    - 当前仓库里已有 `.github/workflows/oxygen-deployment-1000013955.yml`，其中的 `1000013955` 是模板自带的 Storefront ID。
    - 你的 Storefront ID 不同时，需要二选一：
-     - **选项 1**：在 Shopify 部署页按提示「用 Shopify 生成 workflow」，用生成的新 yml 替换现有 `oxygen-deployment-*.yml`；或  
+     - **选项 1**：在 Shopify 部署页按提示「用 Shopify 生成 workflow」，用生成的新 yml 替换现有 `oxygen-deployment-*.yml`；或
      - **选项 2**：把现有 yml 里的 `1000013955` 全部改成你的 Storefront ID，并把 Secret 名改为 `OXYGEN_DEPLOYMENT_TOKEN_<你的ID>`。
 
 5. **触发部署**
@@ -110,12 +114,12 @@ npx shopify hydrogen deploy
 
 ## 四、部署后建议检查
 
-| 项目 | 说明 |
-|------|------|
-| 环境变量 | 在 Shopify Storefront 的「环境与变量」确认 Production/Preview 的变量完整（尤其 `SESSION_SECRET`、Storefront API 相关） |
-| 首页与导航 | 打开部署 URL，确认首页、导航栏、商品区块正常（不再走本地 fallback 布局） |
-| 商品数据 | 若仍用本地 mock 数据，需在后台配置商品/Collection 并让 Hydrogen 从 Storefront API 拉取 |
-| 自定义域名（可选） | 在 Storefront 设置里绑定自己的域名，并按提示做 DNS |
+| 项目               | 说明                                                                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| 环境变量           | 在 Shopify Storefront 的「环境与变量」确认 Production/Preview 的变量完整（尤其 `SESSION_SECRET`、Storefront API 相关） |
+| 首页与导航         | 打开部署 URL，确认首页、导航栏、商品区块正常（不再走本地 fallback 布局）                                               |
+| 商品数据           | 若仍用本地 mock 数据，需在后台配置商品/Collection 并让 Hydrogen 从 Storefront API 拉取                                 |
+| 自定义域名（可选） | 在 Storefront 设置里绑定自己的域名，并按提示做 DNS                                                                     |
 
 ---
 
@@ -134,11 +138,11 @@ npx shopify hydrogen deploy
 
 ## 六、步骤小结（按顺序做）
 
-1. 在 Shopify 后台安装 Headless 渠道，创建/确认 Storefront，记下 Storefront ID。  
-2. 本地：`npx shopify auth login` → `npx shopify hydrogen link` → `npx shopify hydrogen env pull`。  
-3. 选一种部署方式：  
-   - **GitHub**：仓库推 GitHub → 后台连接该仓库 → 复制 Deployment token → 在 GitHub 配 Secret → 更新 workflow 中的 Storefront ID 与 Secret 名 → push 触发部署。  
-   - **CLI**：直接 `npx shopify hydrogen deploy`。  
+1. 在 Shopify 后台安装 Headless 渠道，创建/确认 Storefront，记下 Storefront ID。
+2. 本地：`npx shopify auth login` → `npx shopify hydrogen link` → `npx shopify hydrogen env pull`。
+3. 选一种部署方式：
+   - **GitHub**：仓库推 GitHub → 后台连接该仓库 → 复制 Deployment token → 在 GitHub 配 Secret → 更新 workflow 中的 Storefront ID 与 Secret 名 → push 触发部署。
+   - **CLI**：直接 `npx shopify hydrogen deploy`。
 4. 在部署 URL 上检查首页、导航、环境变量是否正常，再按需配置域名和商品数据。
 
 如果你告诉我「打算用 GitHub 还是只用 CLI」，以及你的 **Storefront ID**（在后台 Headless 渠道里能看到），我可以按你当前仓库结构，写出要改的 workflow 具体内容和 Secret 名称。

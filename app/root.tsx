@@ -32,7 +32,6 @@ import {seoPayload} from '~/lib/seo.server';
 import styles from '~/styles/app.css?url';
 import favicon from '~/assets/favicon.png';
 
-
 import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
 
 export type RootLoader = typeof loader;

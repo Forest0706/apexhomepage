@@ -17,6 +17,7 @@ npm run e2e:ui       # Playwright UI mode
 ## CI
 
 4 jobs run in parallel: `lint`, `format`, `typecheck`, `e2e`.
+
 - `typecheck` job runs `build` then `typecheck` (order matters)
 - Build requires `SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false`
 
@@ -38,6 +39,7 @@ npm run e2e:ui       # Playwright UI mode
 ## Env Variables
 
 Required in `.env`:
+
 - `PUBLIC_STORE_DOMAIN`
 - `PUBLIC_STOREFRONT_API_TOKEN`
 
