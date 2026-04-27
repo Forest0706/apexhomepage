@@ -74,7 +74,7 @@ export const translations = {
         description:
           '人気ゲームキャラクターの高品質フィギュアを制作。プレイヤーの熱狂を、触れられる芸術作品に。',
       },
-      products: '作品',
+      products: 'シリーズ',
       productsLinks: {
         all: 'すべての作品',
         new: '新商品予告',

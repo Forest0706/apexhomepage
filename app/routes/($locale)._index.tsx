@@ -118,12 +118,12 @@ export default function Homepage() {
               >
                 {t.nav.home}
               </Link>
-              <Link
-                to="/products"
-                className="nav-link text-sm tracking-widest uppercase text-[#a8a29e] hover:text-[rgb(var(--apex-text))]"
-              >
-                {t.nav.products}
-              </Link>
+              {/*<Link*/}
+              {/*  to="/products"*/}
+              {/*  className="nav-link text-sm tracking-widest uppercase text-[#a8a29e] hover:text-[rgb(var(--apex-text))]"*/}
+              {/*>*/}
+              {/*  {t.nav.products}*/}
+              {/*</Link>*/}
               <Link
                 to="/#series"
                 className="nav-link text-sm tracking-widest uppercase text-[#a8a29e] hover:text-[rgb(var(--apex-text))]"
@@ -221,16 +221,16 @@ export default function Homepage() {
           >
             {t.nav.home}
           </Link>
-          <Link
-            to="/products"
-            className="text-2xl font-serif"
-            onClick={() => {
-              document.getElementById('mobileMenu')?.classList.remove('active');
-              document.getElementById('menuBtn')?.classList.remove('menu-open');
-            }}
-          >
-            {t.nav.products}
-          </Link>
+          {/*<Link*/}
+          {/*  to="/products"*/}
+          {/*  className="text-2xl font-serif"*/}
+          {/*  onClick={() => {*/}
+          {/*    document.getElementById('mobileMenu')?.classList.remove('active');*/}
+          {/*    document.getElementById('menuBtn')?.classList.remove('menu-open');*/}
+          {/*  }}*/}
+          {/*>*/}
+          {/*  {t.nav.products}*/}
+          {/*</Link>*/}
           <Link
             to="/#series"
             className="text-2xl font-serif"
