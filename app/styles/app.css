@@ -70,7 +70,24 @@
 }
 
 .card-hover:hover {
-  transform: translateY(-8px);
+  transform: translateY(-6px);
+}
+
+.card-hover:hover .card-overlay {
+  opacity: 1;
+}
+
+.card-hover:hover .card-img {
+  transform: scale(1.06);
+}
+
+.card-overlay {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+.card-img {
+  transition: transform 0.7s;
 }
 
 .slide-up {
@@ -150,6 +167,23 @@
 
 .tag-hot {
   background: #c2410c;
+}
+
+.sort-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2378716c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes fadeInAnimation {

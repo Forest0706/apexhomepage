@@ -29,8 +29,7 @@ type LayoutProps = {
 export function PageLayout({children, layout}: LayoutProps) {
   const {headerMenu, footerMenu} = layout || {};
   const location = useLocation();
-  const hideLayout =
-    location.pathname === '/products' || location.pathname === '/products/';
+  const hideLayout = false;
 
   return (
     <>

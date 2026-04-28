@@ -1,12 +1,10 @@
-import {useEffect, useRef} from 'react';
+import {useRef} from 'react';
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, useSearchParams, Link} from '@remix-run/react';
 import {getSeoMeta, getPaginationVariables} from '@shopify/hydrogen';
 
-import {Link} from '~/components/Link';
 import {routeHeaders} from '~/data/cache';
-import {LOCAL_PRODUCTS} from '~/data/localProducts';
-import {ALL_PRODUCTS_QUERY} from '~/graphql/HomepageQueries';
+import {COLLECTIONS_QUERY, ALL_PRODUCTS_QUERY} from '~/graphql/HomepageQueries';
 
 export const headers = routeHeaders;
 
@@ -14,42 +12,98 @@ export async function loader({
   request,
   context: {storefront},
 }: LoaderFunctionArgs) {
-  const paginationVariables = getPaginationVariables(request, {pageBy: 4});
+  const url = new URL(request.url);
+  const after = url.searchParams.get('after') || '';
+  const before = url.searchParams.get('before') || '';
+  const sort = url.searchParams.get('sort') || '新作順';
+  const category = url.searchParams.get('category') || '';
+
+  const sortKey: Record<string, string> = {
+    新作順: 'CREATED_AT',
+    価格が安い順: 'PRICE',
+    価格が高い順: 'PRICE',
+    人気順: 'BEST_SELLING',
+  };
+
+  const reverse: Record<string, boolean> = {
+    新作順: true,
+    価格が安い順: false,
+    価格が高い順: true,
+    人気順: true,
+  };
+
+  let queryString = '';
+  if (category) {
+    queryString = `collection:${category}`;
+  }
+
+  let collectionsData;
+  let productsData;
 
   try {
-    const {products} = await storefront.query(ALL_PRODUCTS_QUERY, {
+    collectionsData = await storefront.query(COLLECTIONS_QUERY, {
       variables: {
-        ...paginationVariables,
-        sortKey: 'CREATED_AT',
-        reverse: true,
+        first: 20,
         country: storefront.i18n.country,
         language: storefront.i18n.language,
       },
     });
+  } catch (error) {
+    collectionsData = { nodes: [] };
+  }
 
-    return defer({
-      products: products.nodes,
-      pageInfo: products.pageInfo,
-      seo: {
-        title: '商品一覧 | APEX TOYS',
-        description: 'ハイQualitéなフィギュアコレクション',
+  const paginationVariables = getPaginationVariables(request, {pageBy: 12});
+
+  try {
+    productsData = await storefront.query(ALL_PRODUCTS_QUERY, {
+      variables: {
+        ...paginationVariables,
+        after: after || undefined,
+        before: before || undefined,
+        query: queryString,
+        sortKey: sortKey[sort] || 'CREATED_AT',
+        reverse: reverse[sort] ?? true,
+        country: storefront.i18n.country,
+        language: storefront.i18n.language,
       },
     });
   } catch (error) {
-    return defer({
-      products: LOCAL_PRODUCTS,
+    productsData = {
+      nodes: [],
       pageInfo: {
         hasNextPage: false,
         hasPreviousPage: false,
         startCursor: '',
         endCursor: '',
       },
-      seo: {
-        title: '商品一覧 | APEX TOYS',
-        description: 'ハイQualitéなフィギュアコレクション',
-      },
-    });
+    };
   }
+
+  const collectionList =
+    collectionsData?.collections?.nodes || collectionsData?.nodes || [];
+  const productList =
+    productsData?.products?.nodes || productsData?.nodes || [];
+  const productPageInfo = productsData?.products?.pageInfo ||
+    productsData?.pageInfo || {
+      hasNextPage: false,
+      hasPreviousPage: false,
+      startCursor: '',
+      endCursor: '',
+    };
+
+  return defer({
+    collections: collectionList,
+    products: productList,
+    pageInfo: productPageInfo,
+    currentAfter: after,
+    currentBefore: before,
+    currentSort: sort,
+    currentCategory: category,
+    seo: {
+      title: '作品一覧 | APEX TOYS',
+      description: '高品質なフィギュアコレクション',
+    },
+  });
 }
 
 export const meta = ({data}: {data: any}) => {
@@ -57,12 +111,13 @@ export const meta = ({data}: {data: any}) => {
 };
 
 function getProductImage(product: any): string {
-  if (product.images) {
-    return product.images[0];
+  if (product.featuredImage?.url) {
+    return product.featuredImage.url;
   }
-  return (
-    product.featuredImage?.url || product.variants?.nodes?.[0]?.image?.url || ''
-  );
+  if (product.variants?.nodes?.[0]?.image?.url) {
+    return product.variants.nodes[0].image.url;
+  }
+  return '';
 }
 
 function getProductTitle(product: any): string {
@@ -76,102 +131,293 @@ function getProductSubtitle(product: any): string {
   return product.vendor || '';
 }
 
-export default function AllProducts() {
-  const {products} = useLoaderData<typeof loader>();
-  const observerRefs = useRef<(HTMLElement | null)[]>([]);
+function getProductPrice(product: any): string {
+  if (product.priceRange?.minVariantPrice?.amount) {
+    const price = parseFloat(product.priceRange.minVariantPrice.amount);
+    return `¥${price.toLocaleString()}`;
+  }
+  if (product.variants?.nodes?.[0]?.price?.amount) {
+    const price = parseFloat(product.variants.nodes[0].price.amount);
+    return `¥${price.toLocaleString()}`;
+  }
+  return '価格未設定';
+}
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const img = entry.target.querySelector('img');
-          const text = entry.target.querySelector('.product-content');
+function Pagination({
+  pageInfo,
+  currentAfter,
+  currentBefore,
+  currentSort,
+  currentCategory,
+}: {
+  pageInfo: any;
+  currentAfter: string;
+  currentBefore: string;
+  currentSort: string;
+  currentCategory: string;
+}) {
+  const hasNextPage = pageInfo?.hasNextPage;
+  const hasPreviousPage = pageInfo?.hasPreviousPage;
+  const endCursor = pageInfo?.endCursor;
+  const startCursor = pageInfo?.startCursor;
 
-          if (entry.isIntersecting) {
-            if (img) {
-              img.classList.remove('opacity-0', 'translate-y-[100px]');
-              img.classList.add('slide-in-bottom');
-            }
-            if (text) {
-              text.classList.remove('opacity-0', 'translate-y-[50px]');
-              text.classList.add('slide-in-text');
-            }
-          } else {
-            if (img) {
-              img.classList.remove('slide-in-bottom');
-              img.classList.add('opacity-0', 'translate-y-[100px]');
-            }
-            if (text) {
-              text.classList.remove('slide-in-text');
-              text.classList.add('opacity-0', 'translate-y-[50px]');
-            }
-          }
-        });
-      },
-      {threshold: 0.1},
-    );
-
-    observerRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const buildParams = (afterParam?: string, beforeParam?: string) => {
+    const params = new URLSearchParams();
+    if (afterParam) params.set('after', afterParam);
+    if (beforeParam) params.set('before', beforeParam);
+    if (currentSort) params.set('sort', currentSort);
+    if (currentCategory) params.set('category', currentCategory);
+    return params.toString() || '?';
+  };
 
   return (
-    <div className="h-screen w-full bg-black overflow-y-scroll snap-y snap-mandatory hiddenScroll relative">
-      {/* Fixed Background (Always visible) */}
-      <div
-        className="fixed inset-0 w-full h-full z-0 bg-cover bg-center pointer-events-none"
-        style={{
-          backgroundImage: 'url("/curtain-bg.svg")',
-          backgroundColor: '#000',
-        }}
-      />
-
-      {/* Opening Curtain (Black overlay that lifts up) */}
-      <div className="fixed top-0 left-0 w-full h-full bg-black z-50 curtain-lift pointer-events-none" />
-
-      {/* Navigation Overlay */}
-      <div className="fixed top-0 left-0 w-full h-20 bg-gradient-to-b from-black/80 to-transparent z-40 pointer-events-none" />
-
-      {products.map((product: any, index: number) => (
-        <section
-          key={product.id}
-          ref={(el) => (observerRefs.current[index] = el)}
-          className="h-screen w-full snap-start relative flex flex-col items-center justify-end overflow-hidden z-10"
+    <div className="mt-16 flex items-center justify-center gap-2">
+      <Link
+        to={buildParams('', startCursor)}
+        className={`w-10 h-10 flex items-center justify-center border border-[#e7e5e4] text-[#a8a29e] hover:border-[#78716c] hover:text-[#292524] transition-all rounded-sm ${
+          !hasPreviousPage ? 'pointer-events-none opacity-50' : ''
+        }`}
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
         >
-          {/* Static Full Screen Image (No Zoom, No Parallax) */}
-          <div className="absolute inset-0 z-0 flex items-center justify-center pb-32">
-            <img
-              src={getProductImage(product)}
-              alt={getProductTitle(product)}
-              className="w-full h-full md:h-[80vh] object-contain opacity-0 translate-y-[100px] transition-none"
-              loading={index === 0 ? 'eager' : 'lazy'}
-            />
-          </div>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </Link>
 
-          {/* Content at Bottom */}
-          <div className="relative z-10 w-full bg-gradient-to-t from-black via-black/90 to-transparent pt-32 pb-16 px-6 flex flex-col items-center text-center space-y-4 product-content opacity-0 translate-y-[50px] transition-none">
-            <h2 className="text-accent font-mono text-sm tracking-[0.5em] uppercase">
-              COLLECTION 0{index + 1}
-            </h2>
-            <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight uppercase drop-shadow-lg">
-              {getProductTitle(product)}
-            </h1>
-            <p className="text-lg text-gray-300 max-w-2xl font-light">
-              {getProductSubtitle(product)}
+      <Link
+        to={buildParams('', startCursor)}
+        className={`px-4 py-2 border border-[#e7e5e4] text-xs tracking-wider rounded-sm transition-all ${
+          !currentAfter && !currentBefore
+            ? 'bg-[#292524] text-white border-[#292524]'
+            : 'text-[#a8a29e] hover:border-[#78716c] hover:text-[#292524]'
+        }`}
+      >
+        1
+      </Link>
+
+      {hasPreviousPage && (
+        <>
+          <span className="text-[#a8a29e] px-2">...</span>
+          <Link
+            to={buildParams('', startCursor)}
+            className="px-4 py-2 border border-[#e7e5e4] text-[#a8a29e] text-xs hover:border-[#78716c] hover:text-[#292524] rounded-sm transition-all"
+          >
+            前へ
+          </Link>
+        </>
+      )}
+
+      <Link
+        to={buildParams(endCursor, '')}
+        className={`px-4 py-2 border border-[#e7e5e4] text-xs tracking-wider rounded-sm transition-all ${
+          hasNextPage
+            ? 'text-[#a8a29e] hover:border-[#78716c] hover:text-[#292524]'
+            : 'pointer-events-none opacity-50'
+        }`}
+      >
+        次へ
+      </Link>
+
+      <Link
+        to={buildParams(endCursor, '')}
+        className={`w-10 h-10 flex items-center justify-center border border-[#e7e5e4] text-[#a8a29e] hover:border-[#78716c] hover:text-[#292524] transition-all rounded-sm ${
+          !hasNextPage ? 'pointer-events-none opacity-50' : ''
+        }`}
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </Link>
+    </div>
+  );
+}
+
+export default function AllProducts() {
+  const {
+    collections,
+    products,
+    pageInfo,
+    currentAfter,
+    currentBefore,
+    currentSort,
+    currentCategory,
+  } = useLoaderData<typeof loader>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const observerRefs = useRef<(HTMLElement | null)[]>([]);
+
+  const isFirstPage = !currentAfter && !currentBefore;
+
+  const collectionList = collections?.nodes || collections || [];
+  const categories = [
+    {handle: '', title: 'すべて'},
+    ...collectionList.map((c: any) => ({handle: c.handle, title: c.title})),
+  ];
+
+  const sortOptions = [
+    {value: '新作順', label: '新作順'},
+    {value: '価格が安い順', label: '価格が安い順'},
+    {value: '価格が高い順', label: '価格が高い順'},
+    {value: '人気順', label: '人気順'},
+  ];
+
+  const handleCategoryClick = (handle: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (handle) {
+      params.set('category', handle);
+    } else {
+      params.delete('category');
+    }
+    params.delete('after');
+    params.delete('before');
+    setSearchParams(params);
+  };
+
+  const handleSortChange = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('sort', value);
+    params.delete('after');
+    params.delete('before');
+    setSearchParams(params);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fafaf9]">
+      <section className="pt-32 pb-16 bg-[#f5f5f4] border-b border-[#e7e5e4]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+              <p className="text-[#78716c] tracking-[0.3em] text-sm uppercase mb-3">
+                Collection
+              </p>
+              <h1 className="text-4xl sm:text-5xl font-serif font-bold text-[#292524]">
+                作品一覧
+              </h1>
+            </div>
+            <p className="text-[#a8a29e] text-sm">
+              全{' '}
+              <span className="text-[#292524] font-medium">
+                {products.length}
+              </span>{' '}
+              点の商品
             </p>
-
-            <Link
-              to={`/products/${product.handle}`}
-              className="mt-6 px-10 py-3 border border-white/30 bg-black/50 backdrop-blur-md text-white font-mono tracking-widest hover:bg-white hover:text-black transition-all duration-300"
-            >
-              詳細を見る
-            </Link>
           </div>
-        </section>
-      ))}
+        </div>
+      </section>
+
+      <section className="sticky top-20 z-30 bg-white/90 backdrop-blur-md border-b border-[#e7e5e4]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
+              {categories.map((category) => (
+                <button
+                  key={category.handle}
+                  onClick={() => handleCategoryClick(category.handle)}
+                  className={`filter-btn px-4 py-2 border border-[#e7e5e4] text-xs tracking-wider uppercase rounded-sm whitespace-nowrap transition-all ${
+                    currentCategory === category.handle
+                      ? 'active bg-[#292524] text-white border-[#292524]'
+                      : 'text-[#a8a29e] hover:border-[#78716c] hover:text-[#292524]'
+                  }`}
+                >
+                  {category.title}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <select
+                value={currentSort}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="sort-select px-4 py-2 bg-white border border-[#e7e5e4] text-[#292524] text-xs tracking-wider rounded-sm focus:outline-none focus:border-[#78716c] cursor-pointer"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12 sm:py-16 bg-[#fafaf9]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products.map((product: any, index: number) => {
+              const imageUrl = getProductImage(product);
+              return (
+                <Link
+                  key={product.id}
+                  to={`/products/${product.handle}`}
+                  className="card-hover group cursor-pointer block"
+                  ref={(el) => (observerRefs.current[index] = el)}
+                >
+                  <div className="relative overflow-hidden bg-[#f0eeeb] aspect-[3/4] mb-5 rounded-sm">
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={product.title}
+                        className="card-img transition-transform duration-700 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="card-img transition-transform duration-700 w-full h-full bg-gradient-to-br from-stone-200 to-stone-300 flex items-center justify-center">
+                        <div className="text-center p-6">
+                          <div className="w-20 h-20 mx-auto mb-3 border-2 border-[#a8a29e]/20 rounded-full flex items-center justify-center bg-white/50">
+                            <span className="text-3xl">🎁</span>
+                          </div>
+                          <p className="text-[#a8a29e] text-xs">商品画像</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="card-overlay absolute inset-0 bg-white/70 opacity-0 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm">
+                      <span className="px-6 py-2 border border-[#78716c] text-[#78716c] text-xs tracking-widest uppercase">
+                        詳細を見る
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-[#a8a29e] text-[11px] tracking-wider uppercase mb-1.5">
+                    {getProductSubtitle(product)}
+                  </p>
+                  <h3 className="text-[#292524] text-base font-medium mb-1.5 group-hover:text-[#78716c] transition-colors">
+                    {getProductTitle(product)}
+                  </h3>
+                  <p className="text-[#78716c] font-serif text-lg">
+                    {getProductPrice(product)}
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+
+          {pageInfo && (
+            <Pagination
+              pageInfo={pageInfo}
+              currentAfter={currentAfter}
+              currentBefore={currentBefore}
+              currentSort={currentSort}
+              currentCategory={currentCategory}
+            />
+          )}
+        </div>
+      </section>
     </div>
   );
 }

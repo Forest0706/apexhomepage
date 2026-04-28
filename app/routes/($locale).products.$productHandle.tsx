@@ -387,19 +387,19 @@ export default function Product() {
                     }`}
                   >
                     <svg
-                        className="w-3 h-3 text-apex-text"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
+                      className="w-3 h-3 text-apex-text"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
                 </div>
               )}
             </div>
@@ -447,8 +447,8 @@ export default function Product() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 mb-8">
-                <div className="flex items-center border border-apex-border rounded-sm w-fit">
+              <div className="flex items-center gap-4 w-full mb-8">
+                <div className="flex items-center border border-apex-border rounded-sm w-[148px]">
                   <button
                     className="w-12 h-12 flex items-center justify-center text-apex-muted hover:text-apex-text transition-colors"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -471,7 +471,7 @@ export default function Product() {
                 {isLocal ? (
                   <Button
                     variant="primary"
-                    className="flex-auto h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
+                    className="flex-1 h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
                     onClick={() => alert('カートに追加しました (デモ)')}
                   >
                     カートに追加
@@ -482,7 +482,7 @@ export default function Product() {
                       {merchandiseId: firstAvailableVariant?.id, quantity},
                     ]}
                     variant="primary"
-                    className="flex-auto h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
+                    className="flex-1 h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
                   >
                     カートに追加
                   </AddToCartButton>

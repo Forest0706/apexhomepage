@@ -1,17 +1,39 @@
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
+export const COLLECTIONS_QUERY = `#graphql
+  query GetCollections(
+    $first: Int
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    collections(first: $first, sortKey: TITLE) {
+      nodes {
+        id
+        title
+        handle
+        image {
+          url
+          altText
+        }
+      }
+    }
+  }
+` as const;
+
 export const ALL_PRODUCTS_QUERY = `#graphql
   query AllProducts(
     $first: Int
     $after: String
-    $country: CountryCode
-    $language: LanguageCode
+    $query: String
     $sortKey: ProductSortKeys
     $reverse: Boolean
+    $country: CountryCode
+    $language: LanguageCode
   ) @inContext(country: $country, language: $language) {
     products(
       first: $first
       after: $after
+      query: $query
       sortKey: $sortKey
       reverse: $reverse
     ) {
