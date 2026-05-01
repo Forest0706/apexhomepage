@@ -62,7 +62,13 @@ export const PRODUCT_QUERY = `#graphql
         value
         type
       }
-
+      collections(first: 5) {
+        nodes {
+          id
+          title
+          handle
+        }
+      }
     }
   }
 ` as const;

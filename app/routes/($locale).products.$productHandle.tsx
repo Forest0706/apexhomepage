@@ -6,8 +6,11 @@ import invariant from 'tiny-invariant';
 
 import {routeHeaders} from '~/data/cache';
 import {PRODUCT_QUERY} from '~/graphql/ProductQueries';
+import {RELATED_PRODUCTS_QUERY} from '~/graphql/RelatedProductsQuery';
+import {FEATURED_PRODUCTS_QUERY} from '~/graphql/FeaturedProductsQuery';
 import {Button} from '~/components/Button';
 import {AddToCartButton} from '~/components/AddToCartButton';
+import {WishlistButton} from '~/components/WishlistButton';
 
 export const headers = routeHeaders;
 
@@ -116,13 +119,72 @@ export async function loader({
 
     const adaptedProduct = adaptShopifyProduct(product);
 
+    let relatedProducts: any[] = [];
+    const collections = product.collections?.nodes || [];
+    const relatedProductIds = new Set<string>();
+    if (collections.length > 0) {
+      const collectionHandle = collections[0].handle;
+      try {
+        const relatedData = await storefront.query(RELATED_PRODUCTS_QUERY, {
+          variables: {
+            collectionHandle,
+            first: 5,
+            country: storefront.i18n.country,
+            language: storefront.i18n.language,
+          },
+        });
+        const allProducts = relatedData.collection?.products?.nodes || [];
+        relatedProducts = allProducts
+          .filter((p: any) => {
+            if (p.id === product.id) return false;
+            relatedProductIds.add(p.id);
+            return true;
+          })
+          .slice(0, 4);
+      } catch (relError) {
+        console.error('Related products query error:', relError);
+      }
+    }
+
+    if (relatedProducts.length < 4) {
+      try {
+        const featuredData = await storefront.query(FEATURED_PRODUCTS_QUERY, {
+          variables: {
+            first: 8,
+            country: storefront.i18n.country,
+            language: storefront.i18n.language,
+          },
+        });
+        const featuredProducts = featuredData.products?.nodes || [];
+        for (const p of featuredProducts) {
+          if (relatedProducts.length >= 4) break;
+          if (!relatedProductIds.has(p.id) && p.id !== product.id) {
+            relatedProducts.push(p);
+            relatedProductIds.add(p.id);
+          }
+        }
+      } catch (featError) {
+        console.error('Featured products query error:', featError);
+      }
+    }
+
+    const productDescription = product.description || '';
+    const cleanDescription = productDescription
+      .replace(/<[^>]*>/g, '')
+      .split(/\n+/)[0]
+      .trim();
+    const seoDescription = cleanDescription.length > 150
+      ? cleanDescription.slice(0, 147) + '...'
+      : cleanDescription;
+
     return defer({
       product: adaptedProduct,
+      relatedProducts,
       isLocal: false,
       variants: product.variants?.nodes || [],
       seo: {
         title: `${product.title} | APEX TOYS`,
-        description: product.description,
+        description: seoDescription,
       },
     });
   } catch (error) {
@@ -135,7 +197,8 @@ export const meta = ({data}: {data: any}) => {
 };
 
 export default function Product() {
-  const {product, isLocal, variants} = useLoaderData<typeof loader>();
+  const {product, relatedProducts, isLocal, variants} =
+    useLoaderData<typeof loader>();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('detail');
   const [quantity, setQuantity] = useState(1);
@@ -467,41 +530,38 @@ export default function Product() {
                   >
                     +
                   </button>
-                </div>
+</div>
                 {isLocal ? (
-                  <Button
-                    variant="primary"
-                    className="flex-1 h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
-                    onClick={() => alert('カートに追加しました (デモ)')}
-                  >
-                    カートに追加
-                  </Button>
-                ) : (
-                  <AddToCartButton
-                    lines={[
-                      {merchandiseId: firstAvailableVariant?.id, quantity},
-                    ]}
-                    variant="primary"
-                    className="flex-1 h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
-                  >
-                    カートに追加
-                  </AddToCartButton>
-                )}
-                <button className="w-12 h-12 border border-apex-border flex items-center justify-center text-apex-muted hover:border-apex-red hover:text-apex-red transition-colors rounded-sm">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.5"
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  <>
+                    <Button
+                      variant="primary"
+                      className="flex-1 h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
+                      onClick={() => alert('カートに追加しました (デモ)')}
+                    >
+                      カートに追加
+                    </Button>
+                    <WishlistButton
+                      productId={product.id}
+                      productHandle={product.handle}
                     />
-                  </svg>
-                </button>
+                  </>
+                ) : (
+                  <>
+                    <AddToCartButton
+                      lines={[
+                        {merchandiseId: firstAvailableVariant?.id, quantity},
+                      ]}
+                      variant="primary"
+                      className="flex-1 h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
+                    >
+                      カートに追加
+                    </AddToCartButton>
+                    <WishlistButton
+                      productId={product.id}
+                      productHandle={product.handle}
+                    />
+                  </>
+                )}
               </div>
 
               <div className="bg-apex-section border border-apex-border rounded-sm p-5">
@@ -727,53 +787,51 @@ export default function Product() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <Link
-                key={i}
-                to="/products/sample-product"
-                className="group cursor-pointer block"
-              >
-                <div className="relative overflow-hidden bg-apex-card aspect-[3/4] mb-4 rounded-sm">
-                  <div className="card-img transition-transform duration-700 w-full h-full bg-gradient-to-br from-stone-200 to-stone-300 flex items-center justify-center">
-                    <div className="text-center p-6">
-                      <div className="w-16 h-16 mx-auto mb-2 border-2 border-apex-accent/20 rounded-full flex items-center justify-center bg-white/50">
-                        <span className="text-2xl">
-                          {['🐱', '🌸', '❄️', '⚡'][i - 1]}
-                        </span>
+            {(relatedProducts || []).map((relProduct: any, idx: number) => {
+              const relImage = relProduct.featuredImage?.url;
+              const relPrice = relProduct.priceRange?.minVariantPrice?.amount;
+              return (
+                <Link
+                  key={relProduct.id}
+                  to={`/products/${relProduct.handle}`}
+                  className="group cursor-pointer block"
+                >
+                  <div className="relative overflow-hidden bg-apex-card aspect-[3/4] mb-4 rounded-sm">
+                    {relImage ? (
+                      <img
+                        src={relImage}
+                        alt={relProduct.title}
+                        className="card-img transition-transform duration-700 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="card-img transition-transform duration-700 w-full h-full bg-gradient-to-br from-stone-200 to-stone-300 flex items-center justify-center">
+                        <div className="text-center p-6">
+                          <div className="w-16 h-16 mx-auto mb-2 border-2 border-apex-accent/20 rounded-full flex items-center justify-center bg-white/50">
+                            <span className="text-2xl">🎁</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <div className="card-overlay absolute inset-0 bg-white/70 opacity-0 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm">
-                    <span className="px-5 py-2 border border-apex-accent-dark text-apex-accent-dark text-xs tracking-widest uppercase">
-                      詳細
-                    </span>
-                  </div>
-                  {i === 3 && (
-                    <div className="absolute top-3 left-3">
-                      <span className="px-2 py-0.5 bg-apex-accent-dark text-white text-[10px] tracking-wider uppercase">
-                        限定
+                    )}
+                    <div className="card-overlay absolute inset-0 bg-white/70 opacity-0 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm">
+                      <span className="px-5 py-2 border border-apex-accent-dark text-apex-accent-dark text-xs tracking-widest uppercase">
+                        詳細
                       </span>
                     </div>
-                  )}
-                </div>
-                <p className="text-apex-muted text-[11px] tracking-wider uppercase mb-1">
-                  {['アークナイツ', 'アークナイツ', '原神', '崩壊3rd'][i - 1]}
-                </p>
-                <h3 className="text-apex-text text-sm font-medium mb-1 group-hover:text-apex-accent-dark transition-colors">
-                  {
-                    [
-                      'シルバーアッシュ',
-                      'エイヤフィヤトラ',
-                      '甘雨 循々守月',
-                      '雷電芽衣 雷の律者',
-                    ][i - 1]
-                  }
-                </h3>
-                <p className="text-apex-accent-dark font-serif text-base">
-                  ¥{['20,800', '19,800', '21,800', '22,800'][i - 1]}
-                </p>
-              </Link>
-            ))}
+                  </div>
+                  <p className="text-apex-muted text-[11px] tracking-wider uppercase mb-1">
+                    {relProduct.vendor || ''}
+                  </p>
+                  <h3 className="text-apex-text text-sm font-medium mb-1 group-hover:text-apex-accent-dark transition-colors">
+                    {relProduct.title}
+                  </h3>
+                  <p className="text-apex-accent-dark font-serif text-base">
+                    {relPrice
+                      ? `¥${parseFloat(relPrice).toLocaleString()}`
+                      : '価格未設定'}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

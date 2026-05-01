@@ -1,10 +1,14 @@
 import {useRef} from 'react';
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, useSearchParams, Link} from '@remix-run/react';
+import {useLoaderData, useFetcher, Link} from '@remix-run/react';
 import {getSeoMeta, getPaginationVariables} from '@shopify/hydrogen';
 
 import {routeHeaders} from '~/data/cache';
-import {COLLECTIONS_QUERY, ALL_PRODUCTS_QUERY} from '~/graphql/HomepageQueries';
+import {
+  COLLECTIONS_QUERY,
+  COLLECTION_PRODUCTS_QUERY,
+  ALL_PRODUCTS_QUERY,
+} from '~/graphql/HomepageQueries';
 
 export const headers = routeHeaders;
 
@@ -15,27 +19,31 @@ export async function loader({
   const url = new URL(request.url);
   const after = url.searchParams.get('after') || '';
   const before = url.searchParams.get('before') || '';
-  const sort = url.searchParams.get('sort') || '新作順';
+  const sort = url.searchParams.get('sort') || 'new';
   const category = url.searchParams.get('category') || '';
 
   const sortKey: Record<string, string> = {
-    新作順: 'CREATED_AT',
-    価格が安い順: 'PRICE',
-    価格が高い順: 'PRICE',
-    人気順: 'BEST_SELLING',
+    new: 'CREATED',
+    price_sort: 'PRICE',
+    price_unsort: 'PRICE',
+    popular: 'BEST_SELLING',
+  };
+
+  const productSortKey: Record<string, string> = {
+    new: 'CREATED_AT',
+    price_sort: 'PRICE',
+    price_unsort: 'PRICE',
+    popular: 'BEST_SELLING',
   };
 
   const reverse: Record<string, boolean> = {
-    新作順: true,
-    価格が安い順: false,
-    価格が高い順: true,
-    人気順: true,
+    new: true,
+    price_sort: false,
+    price_unsort: true,
+    popular: true,
   };
 
-  let queryString = '';
-  if (category) {
-    queryString = `collection:${category}`;
-  }
+  const paginationVariables = getPaginationVariables(request, {pageBy: 12});
 
   let collectionsData;
   let productsData;
@@ -49,24 +57,57 @@ export async function loader({
       },
     });
   } catch (error) {
-    collectionsData = { nodes: [] };
+    collectionsData = {nodes: []};
   }
 
-  const paginationVariables = getPaginationVariables(request, {pageBy: 12});
-
   try {
-    productsData = await storefront.query(ALL_PRODUCTS_QUERY, {
-      variables: {
-        ...paginationVariables,
-        after: after || undefined,
-        before: before || undefined,
-        query: queryString,
-        sortKey: sortKey[sort] || 'CREATED_AT',
-        reverse: reverse[sort] ?? true,
-        country: storefront.i18n.country,
-        language: storefront.i18n.language,
-      },
-    });
+    if (category) {
+      const collectionProductsData = await storefront.query(
+        COLLECTION_PRODUCTS_QUERY,
+        {
+          variables: {
+            collectionHandle: category,
+            first: 12,
+            after: after || undefined,
+            sortKey: sortKey[sort] || 'CREATED',
+            reverse: reverse[sort] ?? true,
+            country: storefront.i18n.country,
+            language: storefront.i18n.language,
+          },
+        },
+      );
+
+      productsData = {
+        nodes: collectionProductsData.collection?.products?.nodes || [],
+        pageInfo: collectionProductsData.collection?.products?.pageInfo || {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: '',
+          endCursor: '',
+        },
+      };
+    } else {
+      const allProductsData = await storefront.query(ALL_PRODUCTS_QUERY, {
+        variables: {
+          ...paginationVariables,
+          after: after || undefined,
+          before: before || undefined,
+          sortKey: productSortKey[sort] || 'CREATED_AT',
+          reverse: reverse[sort] ?? true,
+          country: storefront.i18n.country,
+          language: storefront.i18n.language,
+        },
+      });
+      productsData = {
+        nodes: allProductsData.products?.nodes || [],
+        pageInfo: allProductsData.products?.pageInfo || {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: '',
+          endCursor: '',
+        },
+      };
+    }
   } catch (error) {
     productsData = {
       nodes: [],
@@ -81,15 +122,13 @@ export async function loader({
 
   const collectionList =
     collectionsData?.collections?.nodes || collectionsData?.nodes || [];
-  const productList =
-    productsData?.products?.nodes || productsData?.nodes || [];
-  const productPageInfo = productsData?.products?.pageInfo ||
-    productsData?.pageInfo || {
-      hasNextPage: false,
-      hasPreviousPage: false,
-      startCursor: '',
-      endCursor: '',
-    };
+  const productList = productsData?.nodes || [];
+  const productPageInfo = productsData?.pageInfo || {
+    hasNextPage: false,
+    hasPreviousPage: false,
+    startCursor: '',
+    endCursor: '',
+  };
 
   return defer({
     collections: collectionList,
@@ -156,6 +195,7 @@ function Pagination({
   currentSort: string;
   currentCategory: string;
 }) {
+  const fetcher = useFetcher();
   const hasNextPage = pageInfo?.hasNextPage;
   const hasPreviousPage = pageInfo?.hasPreviousPage;
   const endCursor = pageInfo?.endCursor;
@@ -163,17 +203,24 @@ function Pagination({
 
   const buildParams = (afterParam?: string, beforeParam?: string) => {
     const params = new URLSearchParams();
+    if (currentCategory) params.set('category', currentCategory);
+    if (currentSort) params.set('sort', currentSort);
     if (afterParam) params.set('after', afterParam);
     if (beforeParam) params.set('before', beforeParam);
-    if (currentSort) params.set('sort', currentSort);
-    if (currentCategory) params.set('category', currentCategory);
-    return params.toString() || '?';
+    return `/products?${params.toString()}`;
   };
+
+  const handlePageClick = (after: string, before: string) => {
+    fetcher.load(buildParams(after, before));
+  };
+
+  const isOnPage1 = !currentAfter && !currentBefore;
 
   return (
     <div className="mt-16 flex items-center justify-center gap-2">
-      <Link
-        to={buildParams('', startCursor)}
+      <button
+        onClick={() => handlePageClick('', startCursor)}
+        disabled={!hasPreviousPage}
         className={`w-10 h-10 flex items-center justify-center border border-[#e7e5e4] text-[#a8a29e] hover:border-[#78716c] hover:text-[#292524] transition-all rounded-sm ${
           !hasPreviousPage ? 'pointer-events-none opacity-50' : ''
         }`}
@@ -191,33 +238,34 @@ function Pagination({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-      </Link>
+      </button>
 
-      <Link
-        to={buildParams('', startCursor)}
+      <button
+        onClick={() => handlePageClick('', '')}
         className={`px-4 py-2 border border-[#e7e5e4] text-xs tracking-wider rounded-sm transition-all ${
-          !currentAfter && !currentBefore
+          isOnPage1
             ? 'bg-[#292524] text-white border-[#292524]'
             : 'text-[#a8a29e] hover:border-[#78716c] hover:text-[#292524]'
         }`}
       >
         1
-      </Link>
+      </button>
 
       {hasPreviousPage && (
         <>
           <span className="text-[#a8a29e] px-2">...</span>
-          <Link
-            to={buildParams('', startCursor)}
+          <button
+            onClick={() => handlePageClick('', startCursor)}
             className="px-4 py-2 border border-[#e7e5e4] text-[#a8a29e] text-xs hover:border-[#78716c] hover:text-[#292524] rounded-sm transition-all"
           >
             前へ
-          </Link>
+          </button>
         </>
       )}
 
-      <Link
-        to={buildParams(endCursor, '')}
+      <button
+        onClick={() => handlePageClick(endCursor, '')}
+        disabled={!hasNextPage}
         className={`px-4 py-2 border border-[#e7e5e4] text-xs tracking-wider rounded-sm transition-all ${
           hasNextPage
             ? 'text-[#a8a29e] hover:border-[#78716c] hover:text-[#292524]'
@@ -225,10 +273,11 @@ function Pagination({
         }`}
       >
         次へ
-      </Link>
+      </button>
 
-      <Link
-        to={buildParams(endCursor, '')}
+      <button
+        onClick={() => handlePageClick(endCursor, '')}
+        disabled={!hasNextPage}
         className={`w-10 h-10 flex items-center justify-center border border-[#e7e5e4] text-[#a8a29e] hover:border-[#78716c] hover:text-[#292524] transition-all rounded-sm ${
           !hasNextPage ? 'pointer-events-none opacity-50' : ''
         }`}
@@ -246,12 +295,16 @@ function Pagination({
             d="M9 5l7 7-7 7"
           />
         </svg>
-      </Link>
+      </button>
     </div>
   );
 }
 
 export default function AllProducts() {
+  const initialData = useLoaderData<typeof loader>();
+  const fetcher = useFetcher<typeof loader>();
+
+  const data = fetcher.data || initialData;
   const {
     collections,
     products,
@@ -260,8 +313,7 @@ export default function AllProducts() {
     currentBefore,
     currentSort,
     currentCategory,
-  } = useLoaderData<typeof loader>();
-  const [searchParams, setSearchParams] = useSearchParams();
+  } = data;
   const observerRefs = useRef<(HTMLElement | null)[]>([]);
 
   const isFirstPage = !currentAfter && !currentBefore;
@@ -273,34 +325,43 @@ export default function AllProducts() {
   ];
 
   const sortOptions = [
-    {value: '新作順', label: '新作順'},
-    {value: '価格が安い順', label: '価格が安い順'},
-    {value: '価格が高い順', label: '価格が高い順'},
-    {value: '人気順', label: '人気順'},
+    {value: 'new', label: '新作順'},
+    {value: 'price_sort', label: '作品が安い順'},
+    {value: 'price_unsort', label: '価格が高い順'},
+    {value: 'popular', label: '人気順'},
   ];
 
+  const buildParams = (after: string, before: string) => {
+    const params = new URLSearchParams();
+    if (currentCategory) params.set('category', currentCategory);
+    params.set('sort', currentSort || 'new');
+    if (after) params.set('after', after);
+    if (before) params.set('before', before);
+    return `?${params.toString()}`;
+  };
+
   const handleCategoryClick = (handle: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (handle) {
-      params.set('category', handle);
-    } else {
-      params.delete('category');
-    }
-    params.delete('after');
-    params.delete('before');
-    setSearchParams(params);
+    const params = new URLSearchParams();
+    if (handle) params.set('category', handle);
+    params.set('sort', currentSort || 'new');
+    fetcher.load(`/products?${params.toString()}`);
   };
 
   const handleSortChange = (value: string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams();
+    if (currentCategory) params.set('category', currentCategory);
     params.set('sort', value);
-    params.delete('after');
-    params.delete('before');
-    setSearchParams(params);
+    fetcher.load(`/products?${params.toString()}`);
   };
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
+      {/* DEBUG: Show category filter status */}
+      {currentCategory && (
+        <div className="bg-yellow-100 border-b border-yellow-300 px-4 py-2 text-sm">
+          🔍 Debug: 当前分类 = <strong>{currentCategory}</strong> | 产品数量 = {products.length}
+        </div>
+      )}
       <section className="pt-32 pb-16 bg-[#f5f5f4] border-b border-[#e7e5e4]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">

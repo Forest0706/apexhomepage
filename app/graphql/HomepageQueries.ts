@@ -20,6 +20,61 @@ export const COLLECTIONS_QUERY = `#graphql
   }
 ` as const;
 
+export const COLLECTION_PRODUCTS_QUERY = `#graphql
+  query CollectionProducts(
+    $collectionHandle: String!
+    $first: Int
+    $after: String
+    $sortKey: ProductCollectionSortKeys
+    $reverse: Boolean
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    collection(handle: $collectionHandle) {
+      id
+      title
+      products(
+        first: $first
+        after: $after
+        sortKey: $sortKey
+        reverse: $reverse
+      ) {
+        nodes {
+          id
+          title
+          handle
+          vendor
+          featuredImage {
+            url
+            altText
+          }
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          variants(first: 1) {
+            nodes {
+              id
+              image {
+                url
+                altText
+              }
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          hasPreviousPage
+          startCursor
+          endCursor
+        }
+      }
+    }
+  }
+` as const;
+
 export const ALL_PRODUCTS_QUERY = `#graphql
   query AllProducts(
     $first: Int
