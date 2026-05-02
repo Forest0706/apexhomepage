@@ -80,7 +80,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       data?.customerUpdate?.userErrors?.[0]?.message,
     );
 
-    return redirect(params?.locale ? `${params.locale}/account` : '/account');
+    return redirect('/account');
   } catch (error: any) {
     return json(
       {formError: error?.message},

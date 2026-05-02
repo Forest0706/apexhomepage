@@ -13,6 +13,7 @@ export const PRODUCT_QUERY = `#graphql
       descriptionHtml
       tags
       availableForSale
+      requiresSellingPlan
       priceRange {
         minVariantPrice {
           amount
@@ -47,6 +48,22 @@ export const PRODUCT_QUERY = `#graphql
           selectedOptions {
             name
             value
+          }
+          # ✅ 新增：变体级别的 selling plan 关联
+          sellingPlanAllocations(first: 5) {
+            nodes {
+              sellingPlan {
+                id
+                name
+                description
+              }
+              priceAdjustments {
+                price {
+                  amount
+                  currencyCode
+                }
+              }
+            }
           }
         }
       }

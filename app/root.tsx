@@ -149,7 +149,11 @@ async function loadCriticalData({request, context}: LoaderFunctionArgs) {
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
       withPrivacyBanner: true,
     },
-    selectedLocale: storefront.i18n,
+    selectedLocale: {
+      language: 'JA',
+      country: 'JP',
+      pathPrefix: '',
+    },
   };
 }
 

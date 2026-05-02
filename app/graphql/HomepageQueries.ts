@@ -44,6 +44,33 @@ export const COLLECTION_PRODUCTS_QUERY = `#graphql
           title
           handle
           vendor
+          tags
+          # ✅ 新增：判断是否为预购商品
+          requiresSellingPlan
+          sellingPlanGroups(first: 5) {
+            nodes {
+              name
+              sellingPlans(first: 5) {
+                nodes {
+                  id
+                  name
+                  # ✅ 通过 checkoutCharge 判断付款方式
+                  checkoutCharge {
+                    type    # PERCENTAGE 或 PRICE
+                    value {
+                      ... on MoneyV2 {
+                        amount
+                        currencyCode
+                      }
+                      ... on SellingPlanCheckoutChargePercentageValue {
+                        percentage
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
           featuredImage {
             url
             altText
@@ -60,6 +87,22 @@ export const COLLECTION_PRODUCTS_QUERY = `#graphql
               image {
                 url
                 altText
+              }
+              # ✅ 新增：变体级别的 selling plan 关联
+              sellingPlanAllocations(first: 5) {
+                nodes {
+                  sellingPlan {
+                    id
+                    name
+                    description
+                  }
+                  priceAdjustments {
+                    price {
+                      amount
+                      currencyCode
+                    }
+                  }
+                }
               }
             }
           }
@@ -98,6 +141,32 @@ export const ALL_PRODUCTS_QUERY = `#graphql
         handle
         vendor
         tags
+        # ✅ 新增：判断是否为预购商品
+        requiresSellingPlan
+        sellingPlanGroups(first: 5) {
+          nodes {
+            name
+            sellingPlans(first: 5) {
+              nodes {
+                id
+                name
+                # ✅ 通过 checkoutCharge 判断付款方式
+                checkoutCharge {
+                  type    # PERCENTAGE 或 PRICE
+                  value {
+                    ... on MoneyV2 {
+                      amount
+                      currencyCode
+                    }
+                    ... on SellingPlanCheckoutChargePercentageValue {
+                      percentage
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
         featuredImage {
           url
           altText
@@ -135,6 +204,22 @@ export const ALL_PRODUCTS_QUERY = `#graphql
             product {
               handle
               title
+            }
+            # ✅ 新增：变体级别的 selling plan 关联
+            sellingPlanAllocations(first: 5) {
+              nodes {
+                sellingPlan {
+                  id
+                  name
+                  description
+                }
+                priceAdjustments {
+                  price {
+                    amount
+                    currencyCode
+                  }
+                }
+              }
             }
           }
         }
@@ -150,18 +235,47 @@ export const ALL_PRODUCTS_QUERY = `#graphql
 ` as const;
 
 export const HOMEPAGE_PRODUCTS_QUERY = `#graphql
-  query HomepageProducts(
-    $first: Int
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
-    products(first: $first, sortKey: CREATED_AT, reverse: true) {
+query HomepageProducts(
+  $first: Int
+  $country: CountryCode
+  $language: LanguageCode
+) @inContext(country: $country, language: $language) {
+  collection(handle: "homepage-products") {
+    id
+    title
+    products(first: $first, sortKey: MANUAL) {
       nodes {
         id
         title
         handle
         vendor
         tags
+        # ✅ 新增：判断是否为预购商品
+        requiresSellingPlan
+        sellingPlanGroups(first: 5) {
+          nodes {
+            name
+            sellingPlans(first: 5) {
+              nodes {
+                id
+                name
+                # ✅ 通过 checkoutCharge 判断付款方式
+                checkoutCharge {
+                  type    # PERCENTAGE 或 PRICE
+                  value {
+                    ... on MoneyV2 {
+                      amount
+                      currencyCode
+                    }
+                    ... on SellingPlanCheckoutChargePercentageValue {
+                      percentage
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
         featuredImage {
           url
           altText
@@ -178,33 +292,33 @@ export const HOMEPAGE_PRODUCTS_QUERY = `#graphql
           nodes {
             id
             availableForSale
-            image {
-              url
-              altText
-              width
-              height
+            # ✅ 新增：变体级别的 selling plan 关联
+            sellingPlanAllocations(first: 5) {
+              nodes {
+                sellingPlan {
+                  id
+                  name
+                  description
+                }
+                priceAdjustments {
+                  price {
+                    amount
+                    currencyCode
+                  }
+                }
+              }
             }
-            price {
-              amount
-              currencyCode
-            }
-            compareAtPrice {
-              amount
-              currencyCode
-            }
-            selectedOptions {
-              name
-              value
-            }
-            product {
-              handle
-              title
-            }
+            image { url altText width height }
+            price { amount currencyCode }
+            compareAtPrice { amount currencyCode }
+            selectedOptions { name value }
+            product { handle title }
           }
         }
       }
     }
   }
+}
 ` as const;
 
 export const BRAND_CONCEPT_QUERY = `#graphql

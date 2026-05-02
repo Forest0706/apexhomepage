@@ -16,7 +16,7 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
 
 export async function loader({request, context, params}: LoaderFunctionArgs) {
   if (!params.id) {
-    return redirect(params?.locale ? `${params.locale}/account` : '/account');
+    return redirect('/account');
   }
 
   const queryParams = new URL(request.url).searchParams;

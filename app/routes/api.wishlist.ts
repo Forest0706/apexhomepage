@@ -46,7 +46,7 @@ export async function action({request, context}: ActionFunctionArgs) {
 
     const metafieldInput = {
       namespace: 'wishlist',
-      key: 'items',
+      key: 'product_ids',
       value: JSON.stringify(updatedItems),
       type: 'json',
     };
@@ -101,11 +101,11 @@ export async function loader({context}: ActionFunctionArgs) {
     const customer = data?.customer;
 
     if (!customer?.metafield?.value) {
-      return json({items: []});
+      return json({productIds: []});
     }
 
-    const items = JSON.parse(customer.metafield.value);
-    return json({items});
+    const productIds = JSON.parse(customer.metafield.value);
+    return json({productIds});
   } catch (error) {
     console.error('Wishlist loader error:', error);
     return json({items: []});

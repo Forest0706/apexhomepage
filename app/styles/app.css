@@ -58,6 +58,13 @@
 }
 
 /* Apex Custom Styles */
+
+/* ShopPayButton 样式覆盖 */
+shop-pay-payment-request-button {
+  --shop-pay-button-height: 48px;
+  --shop-pay-button-border-radius: 2px;
+}
+
 .apex-gradient {
   background: linear-gradient(135deg, #78716c 0%, #a8a29e 50%, #78716c 100%);
   -webkit-background-clip: text;

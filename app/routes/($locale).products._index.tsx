@@ -1,4 +1,5 @@
 import {useRef} from 'react';
+import clsx from 'clsx';
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, useFetcher, Link} from '@remix-run/react';
 import {getSeoMeta, getPaginationVariables} from '@shopify/hydrogen';
@@ -182,6 +183,15 @@ function getProductPrice(product: any): string {
   return '価格未設定';
 }
 
+function getProductTag(product: any): string | null {
+  const isPreorder = product.requiresSellingPlan === true;
+  const isNew = product.tags?.includes('isNew');
+
+  if (isPreorder) return '予約';
+  if (isNew) return '新着';
+  return null;
+}
+
 function Pagination({
   pageInfo,
   currentAfter,
@@ -315,7 +325,6 @@ export default function AllProducts() {
     currentCategory,
   } = data;
   const observerRefs = useRef<(HTMLElement | null)[]>([]);
-
   const isFirstPage = !currentAfter && !currentBefore;
 
   const collectionList = collections?.nodes || collections || [];
@@ -359,7 +368,8 @@ export default function AllProducts() {
       {/* DEBUG: Show category filter status */}
       {currentCategory && (
         <div className="bg-yellow-100 border-b border-yellow-300 px-4 py-2 text-sm">
-          🔍 Debug: 当前分类 = <strong>{currentCategory}</strong> | 产品数量 = {products.length}
+          🔍 Debug: 当前分类 = <strong>{currentCategory}</strong> | 产品数量 ={' '}
+          {products.length}
         </div>
       )}
       <section className="pt-32 pb-16 bg-[#f5f5f4] border-b border-[#e7e5e4]">
@@ -447,6 +457,18 @@ export default function AllProducts() {
                           <p className="text-[#a8a29e] text-xs">商品画像</p>
                         </div>
                       </div>
+                    )}
+                    {getProductTag(product) && (
+                      <span
+                        className={clsx(
+                          'absolute top-4 left-4 text-white text-xs font-bold tracking-wider uppercase px-3 py-1',
+                          product.requiresSellingPlan === true
+                            ? 'bg-[#d97706]'
+                            : 'bg-[#dc2626]',
+                        )}
+                      >
+                        {getProductTag(product)}
+                      </span>
                     )}
                     <div className="card-overlay absolute inset-0 bg-white/70 opacity-0 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm">
                       <span className="px-6 py-2 border border-[#78716c] text-[#78716c] text-xs tracking-widest uppercase">

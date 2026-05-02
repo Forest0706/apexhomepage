@@ -1,26 +1,17 @@
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, useNavigate, useRouteLoaderData} from '@remix-run/react';
-import {Suspense} from 'react';
-import type {ReactElement} from 'react';
+import {useLoaderData} from '@remix-run/react';
 import {getSeoMeta} from '@shopify/hydrogen';
 
-import {routeHeaders} from '~/data/cache';
 import {LOCAL_PRODUCTS} from '~/data/localProducts';
 import {HOMEPAGE_PRODUCTS_QUERY} from '~/graphql/HomepageQueries';
 import {ProductCard} from '~/components/ProductCard';
 import {Link} from '~/components/Link';
-import {Drawer, useDrawer} from '~/components/Drawer';
-import {Cart} from '~/components/Cart';
-import {CartLoading} from '~/components/CartLoading';
 import {translations} from '~/data/translations';
-import type {RootLoader} from '~/root';
-
-export const headers = routeHeaders;
+import {NewsletterForm} from '~/components/NewsletterForm';
 
 export async function loader({context: {storefront}}: LoaderFunctionArgs) {
   const t = translations.ja;
-
-  const productsResult = await storefront
+  const collectionResult = await storefront
     .query(HOMEPAGE_PRODUCTS_QUERY, {
       variables: {
         first: 6,
@@ -29,12 +20,10 @@ export async function loader({context: {storefront}}: LoaderFunctionArgs) {
       },
     })
     .catch((err) => {
-      console.error('Products query failed:', err);
       return {products: {nodes: LOCAL_PRODUCTS}};
     });
-
   return defer({
-    products: productsResult.products?.nodes || LOCAL_PRODUCTS,
+    products: collectionResult.collection?.products?.nodes || LOCAL_PRODUCTS,
     t,
     seo: {
       title: 'APEX TOYS | 高級フィギュア専門店',
@@ -49,119 +38,9 @@ export const meta = ({data}: {data: any}) => {
 
 export default function Homepage() {
   const {products, t} = useLoaderData<typeof loader>();
-  const navigate = useNavigate();
-  const rootData = useRouteLoaderData<RootLoader>('root');
-  const {
-    isOpen: isCartOpen,
-    openDrawer: openCart,
-    closeDrawer: closeCart,
-  } = useDrawer();
-
-  const handleNewsletter = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    alert(t.newsletter.success);
-  };
 
   return (
     <div className="bg-[#fafaf9] text-[#292524]">
-      {/* Cart Drawer */}
-      <Drawer
-        open={isCartOpen}
-        onClose={closeCart}
-        heading="カート"
-        openFrom="right"
-      >
-        <div className="grid">
-          <Suspense fallback={<CartLoading />}>
-            {rootData?.cart && (
-              <Cart layout="drawer" onClose={closeCart} cart={rootData.cart} />
-            )}
-          </Suspense>
-        </div>
-      </Drawer>
-
-      {/* Navigation */}
-
-      {/* Mobile Menu */}
-      <div
-        id="mobileMenu"
-        className="mobile-menu fixed inset-0 z-40 bg-white pt-24 px-8 md:hidden"
-      >
-        <div className="flex flex-col space-y-8">
-          <Link
-            to="/"
-            className="text-2xl font-serif"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('/');
-              document.getElementById('mobileMenu')?.classList.remove('active');
-              document.getElementById('menuBtn')?.classList.remove('menu-open');
-            }}
-          >
-            {t.nav.home}
-          </Link>
-          {/*<Link*/}
-          {/*  to="/products"*/}
-          {/*  className="text-2xl font-serif"*/}
-          {/*  onClick={() => {*/}
-          {/*    document.getElementById('mobileMenu')?.classList.remove('active');*/}
-          {/*    document.getElementById('menuBtn')?.classList.remove('menu-open');*/}
-          {/*  }}*/}
-          {/*>*/}
-          {/*  {t.nav.products}*/}
-          {/*</Link>*/}
-          <Link
-            to="/#series"
-            className="text-2xl font-serif"
-            onClick={() => {
-              document.getElementById('mobileMenu')?.classList.remove('active');
-              document.getElementById('menuBtn')?.classList.remove('menu-open');
-            }}
-          >
-            {t.nav.series}
-          </Link>
-          <Link
-            to="/#about"
-            className="text-2xl font-serif"
-            onClick={() => {
-              document.getElementById('mobileMenu')?.classList.remove('active');
-              document.getElementById('menuBtn')?.classList.remove('menu-open');
-            }}
-          >
-            {t.nav.about}
-          </Link>
-          <Link
-            to="/#contact"
-            className="text-2xl font-serif"
-            onClick={() => {
-              document.getElementById('mobileMenu')?.classList.remove('active');
-              document.getElementById('menuBtn')?.classList.remove('menu-open');
-            }}
-          >
-            {t.nav.contact}
-          </Link>
-        </div>
-        <div className="absolute bottom-12 left-8 right-8">
-          <div className="border-t border-[#e7e5e4] pt-8 flex items-center justify-between">
-            <span className="text-[#a8a29e] text-sm">Apex-Toys © 2025</span>
-            <div className="flex space-x-4">
-              <button
-                onClick={openCart}
-                className="text-[#a8a29e] hover:text-[#78716c]"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Hero Banner */}
       <section
         id="home"
@@ -442,33 +321,12 @@ export default function Homepage() {
       </section>
 
       {/* Newsletter */}
-      <section className="py-20 bg-[#fafaf9] border-y border-[#e7e5e4]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-2xl sm:text-3xl font-serif font-bold mb-4">
-            {t.newsletter.title}
-          </h3>
-          <p className="text-[#a8a29e] mb-10 font-light">
-            {t.newsletter.description}
-          </p>
-          <form
-            className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto"
-            onSubmit={handleNewsletter}
-          >
-            <input
-              type="email"
-              placeholder={t.newsletter.placeholder}
-              className="flex-1 px-6 py-4 bg-white border border-[#e7e5e4] placeholder-[#a8a29e] focus:outline-none focus:border-[#78716c] transition-colors text-sm rounded-sm"
-              required
-            />
-            <button
-              type="submit"
-              className="px-8 py-4 bg-[rgb(var(--apex-text))] text-white font-medium tracking-wider uppercase text-sm hover:bg-[#78716c] transition-colors rounded-sm"
-            >
-              {t.newsletter.button}
-            </button>
-          </form>
-        </div>
-      </section>
+      <NewsletterForm
+        title={t.newsletter.title}
+        description={t.newsletter.description}
+        placeholder={t.newsletter.placeholder}
+        buttonText={t.newsletter.button}
+      />
     </div>
   );
 }

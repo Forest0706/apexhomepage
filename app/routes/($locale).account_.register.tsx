@@ -17,10 +17,12 @@ export async function loader({context, params}: LoaderFunctionArgs) {
 }
 
 export async function action({request, context}: ActionFunctionArgs) {
-  const {customerAccount, session} = context;
+  const {customerAccount, session, admin} = context;
   const formData = await request.formData();
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
+  const firstName = (formData.get('firstName') as string) || '';
+  const lastName = (formData.get('lastName') as string) || '';
   const guestWishlist = formData.get('guestWishlist') as string;
 
   if (!email || !password) {
@@ -30,11 +32,17 @@ export async function action({request, context}: ActionFunctionArgs) {
     );
   }
 
+  if (password.length < 5) {
+    return json({error: 'パスワードは5文字以上必要です'}, {status: 400});
+  }
+
   try {
-    const {session: custSession, customer} =
-      await customerAccount.authenticate.storefront({
+    const {customer, session: custSession} =
+      await customerAccount.authenticate.storefront.register({
         email,
         password,
+        firstName,
+        lastName,
       });
 
     const customerAccessToken = custSession.get('customerAccessToken');
@@ -47,23 +55,9 @@ export async function action({request, context}: ActionFunctionArgs) {
       try {
         const guestItems = JSON.parse(guestWishlist) as string[];
         if (guestItems.length > 0) {
-          const {data} = await customerAccount.query(
-            `#graphql
-              query GetCustomerWishlist {
-                customer {
-                  metafield(namespace: "wishlist", key: "product_ids") {
-                    value
-                  }
-                }
-              }
-            `,
-          );
-          const existingItems = data?.customer?.metafield?.value
-            ? JSON.parse(data.customer.metafield.value)
-            : [];
-          mergedWishlist = [...new Set([...existingItems, ...guestItems])];
+          mergedWishlist = [...new Set(guestItems)];
 
-          await context.admin(
+          await admin(
             `#graphql
               mutation UpdateWishlist($input: CustomerInput!) {
                 customerUpdate(input: $input) {
@@ -97,14 +91,18 @@ export async function action({request, context}: ActionFunctionArgs) {
       {headers: {'Set-Cookie': await session.commit()}},
     );
   } catch (error: any) {
-    return json(
-      {error: 'メールアドレスまたはパスワードが正しくありません'},
-      {status: 400},
-    );
+    const errorMessage = error.message || '登録に失敗しました';
+    if (errorMessage.includes('already exists')) {
+      return json(
+        {error: 'このメールアドレスは既に登録されています'},
+        {status: 400},
+      );
+    }
+    return json({error: errorMessage}, {status: 400});
   }
 }
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
@@ -113,15 +111,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#fafaf9] py-12 px-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-[#292524]">ログイン</h2>
+          <h2 className="text-3xl font-bold text-[#292524]">新規登録</h2>
           <p className="mt-2 text-sm text-[#78716c]">
-            APEX TOYS アカウントをお持ちでない方は
+            すでにアカウントをお持ちの方は
             <a
-              href="/ja/account/register"
+              href="/ja/account/login"
               className="text-[#5a31f4] hover:underline"
             >
               {' '}
-              新規登録
+              ログイン
             </a>
           </p>
         </div>
@@ -144,6 +142,39 @@ export default function LoginPage() {
           )}
 
           <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-[#292524]"
+                >
+                  姓
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  className="mt-1 block w-full px-4 py-3 border border-[#e7e5e4] rounded-sm focus:ring-[#5a31f4] focus:border-[#5a31f4]"
+                  placeholder="山田"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-[#292524]"
+                >
+                  名
+                </label>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  className="mt-1 block w-full px-4 py-3 border border-[#e7e5e4] rounded-sm focus:ring-[#5a31f4] focus:border-[#5a31f4]"
+                  placeholder="太郎"
+                />
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="email"
@@ -173,11 +204,13 @@ export default function LoginPage() {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 required
+                minLength={5}
                 className="mt-1 block w-full px-4 py-3 border border-[#e7e5e4] rounded-sm focus:ring-[#5a31f4] focus:border-[#5a31f4]"
                 placeholder="••••••••"
               />
+              <p className="mt-1 text-xs text-[#78716c]">5文字以上必要です</p>
             </div>
           </div>
 
@@ -186,7 +219,7 @@ export default function LoginPage() {
             disabled={isSubmitting}
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-sm shadow-sm text-sm font-medium text-white bg-[#5a31f4] hover:bg-[#4a28d4] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5a31f4] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'ログイン中...' : 'ログイン'}
+            {isSubmitting ? '登録中...' : '新規登録'}
           </button>
         </Form>
       </div>

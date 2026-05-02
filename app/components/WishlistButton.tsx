@@ -1,59 +1,124 @@
 import {useFetcher} from '@remix-run/react';
+import {useState, useEffect, useCallback} from 'react';
+import {localWishlist} from '~/utils/localWishlist';
 
 interface WishlistButtonProps {
   productId: string;
   productHandle: string;
   isWishlisted?: boolean;
+  isLoggedIn?: boolean;
+  className?: string;
+  formClassName?: string;
 }
 
 export function WishlistButton({
   productId,
   productHandle,
   isWishlisted: initialWishlisted = false,
+  isLoggedIn = false,
+  className,
+  formClassName,
 }: WishlistButtonProps) {
   const fetcher = useFetcher();
+  const [localWishlisted, setLocalWishlisted] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (!isLoggedIn) {
+      setLocalWishlisted(localWishlist.get().includes(productId));
+    }
+  }, [productId, isLoggedIn]);
 
   const isSubmitting = fetcher.state !== 'idle';
-  const optimisticWishlisted =
-    fetcher.formData?.get('action') === 'add'
+
+  const wishlisted = isLoggedIn
+    ? fetcher.formData?.get('action') === 'add'
       ? true
       : fetcher.formData?.get('action') === 'remove'
-        ? false
-        : initialWishlisted;
+      ? false
+      : initialWishlisted
+    : localWishlisted;
+
+  const handleClick = useCallback(() => {
+    if (isLoggedIn) {
+      return;
+    }
+
+    if (wishlisted) {
+      localWishlist.remove(productId);
+      setLocalWishlisted(false);
+    } else {
+      localWishlist.add(productId);
+      setLocalWishlisted(true);
+    }
+  }, [isLoggedIn, wishlisted, productId]);
+
+  if (!isLoggedIn) {
+    return (
+      <button
+        type="button"
+        disabled={isSubmitting}
+        aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+        onClick={handleClick}
+        className={`w-12 h-12 flex items-center justify-center border border-apex-border text-gray-400 hover:text-red-500 hover:border-red-400 transition-all duration-300 rounded-sm hover:bg-red-50 ${
+          wishlisted ? 'text-red-500 border-red-400' : ''
+        } ${className || ''}`}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill={wishlisted ? 'currentColor' : 'none'}
+          className={`w-6 h-6 transition-transform duration-300 ${
+            wishlisted ? 'scale-110' : 'hover:scale-110'
+          }`}
+        >
+          <path
+            d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+    );
+  }
 
   return (
-    <fetcher.Form method="post" action="/api/wishlist">
+    <fetcher.Form
+      method="post"
+      action="/api/wishlist"
+      className={formClassName}
+    >
       <input type="hidden" name="productId" value={productId} />
       <input
         type="hidden"
         name="action"
-        value={optimisticWishlisted ? 'remove' : 'add'}
+        value={wishlisted ? 'remove' : 'add'}
       />
       <button
         type="submit"
         disabled={isSubmitting}
-        aria-label={optimisticWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-        className="w-12 h-12 border border-apex-border flex items-center justify-center text-apex-muted hover:border-apex-red hover:text-apex-red transition-colors rounded-sm"
+        aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+        className={`w-12 h-12 flex items-center justify-center border border-apex-border text-gray-400 hover:text-red-500 hover:border-red-400 transition-all duration-300 rounded-sm hover:bg-red-50 ${
+          wishlisted ? 'text-red-500 border-red-400' : ''
+        } ${className || ''}`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          fill={optimisticWishlisted ? 'currentColor' : 'none'}
           viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className={`w-5 h-5 ${
-            optimisticWishlisted ? 'text-red-500' : ''
+          fill={wishlisted ? 'currentColor' : 'none'}
+          className={`w-6 h-6 transition-transform duration-300 ${
+            wishlisted ? 'scale-110' : 'hover:scale-110'
           }`}
         >
           <path
+            d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"
+            stroke="currentColor"
+            strokeWidth={1.5}
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5l-5.457.9c-1.653.27-3.003 1.557-3.003 3.15v.8l-.002.006a.75.75 0 00.002.013l.006-.006H4.5l.75.75-.75-.75h-1.5l-.006.038a.75.75 0 00.012.039l.038-.006h1.694l.75-.75H3.75l-.006.013a.75.75 0 00.013.012l.013-.013H4.5l.75.75-.75-.75h-.75a2.25 2.25 0 00-2.25 2.25v.8c0 .98.63 1.838 1.557 1.993l5.457.9c2.59 0 4.688-2.015 4.688-4.5v-.8c0-.98-.63-1.838-1.557-1.993l-5.457-.9C6.63 8.867 6 8.02 6 7.04v-.8c0-.245.015-.485.044-.718l.037.01z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12.75 7.56v.888c0 .245.015.485.044.718l-.037-.01v-.01l.006.006a2.25 2.25 0 01-.65 1.556l-.013.163-.163.013a2.25 2.25 0 01-1.556.65l-.163.013V12.75l-.75-.75a2.25 2.25 0 01-.65-1.556l-.013-.163a2.25 2.25 0 01.65-1.556l.163-.013.888-.037h-3.58l.75.75-.75-.75h4.33a2.25 2.25 0 011.556-.65l.163-.013a2.25 2.25 0 011.556.65l.013.163.013-.163a2.25 2.25 0 00.65-1.556V6.31l-.003-.007a.75.75 0 00-.012-.038l-.025.006z"
           />
         </svg>
       </button>

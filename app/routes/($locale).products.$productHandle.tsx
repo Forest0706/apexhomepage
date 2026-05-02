@@ -8,13 +8,14 @@ import {routeHeaders} from '~/data/cache';
 import {PRODUCT_QUERY} from '~/graphql/ProductQueries';
 import {RELATED_PRODUCTS_QUERY} from '~/graphql/RelatedProductsQuery';
 import {FEATURED_PRODUCTS_QUERY} from '~/graphql/FeaturedProductsQuery';
-import {Button} from '~/components/Button';
 import {AddToCartButton} from '~/components/AddToCartButton';
 import {WishlistButton} from '~/components/WishlistButton';
+import {ShopPayButtonCustom} from '~/components/ShopPayButtonCustom';
 
 export const headers = routeHeaders;
 
 type ShopifyProduct = {
+  requiresSellingPlan: boolean;
   releaseDate: {
     value: string;
     type: string;
@@ -58,6 +59,21 @@ type ShopifyProduct = {
       id: string;
       title: string;
       availableForSale?: boolean;
+      sellingPlanAllocations: {
+        nodes: Array<{
+          sellingPlan: {
+            id: string;
+            name: string;
+            description: string;
+          };
+          priceAdjustments: {
+            price: {
+              amount: string;
+              currencyCode: string;
+            };
+          };
+        }>;
+      };
       price: {
         amount: string;
         currencyCode: string;
@@ -77,6 +93,7 @@ function adaptShopifyProduct(product: ShopifyProduct) {
       title: v.title,
       availableForSale: v.availableForSale,
       price: v.price,
+      sellingPlanAllocations: v.sellingPlanAllocations,
     })) || [];
 
   return {
@@ -84,6 +101,7 @@ function adaptShopifyProduct(product: ShopifyProduct) {
     handle: product.handle,
     title: product.title,
     vendor: product.vendor || 'APEX TOYS',
+    requiresSellingPlan: product.requiresSellingPlan || false,
     description: product.description || '',
     subTitle: '',
     price: product.priceRange?.minVariantPrice || {
@@ -103,7 +121,7 @@ function adaptShopifyProduct(product: ShopifyProduct) {
 
 export async function loader({
   params,
-  context: {storefront},
+  context: {storefront, env, customerAccount},
 }: LoaderFunctionArgs) {
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param');
@@ -116,7 +134,6 @@ export async function loader({
         language: storefront.i18n.language,
       },
     });
-
     const adaptedProduct = adaptShopifyProduct(product);
 
     let relatedProducts: any[] = [];
@@ -173,15 +190,42 @@ export async function loader({
       .replace(/<[^>]*>/g, '')
       .split(/\n+/)[0]
       .trim();
-    const seoDescription = cleanDescription.length > 150
-      ? cleanDescription.slice(0, 147) + '...'
-      : cleanDescription;
+    const seoDescription =
+      cleanDescription.length > 150
+        ? cleanDescription.slice(0, 147) + '...'
+        : cleanDescription;
+
+    let wishlistItems: string[] = [];
+    let isLoggedIn = false;
+    try {
+      isLoggedIn = await customerAccount.isLoggedIn();
+      if (isLoggedIn) {
+        const {data} = await customerAccount.query(
+          `#graphql
+            query GetCustomerWishlist {
+              customer {
+                metafield(namespace: "wishlist", key: "product_ids") {
+                  value
+                }
+              }
+            }
+          `,
+        );
+        if (data?.customer?.metafield?.value) {
+          wishlistItems = JSON.parse(data.customer.metafield.value);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load wishlist:', e);
+    }
 
     return defer({
       product: adaptedProduct,
       relatedProducts,
-      isLocal: false,
       variants: product.variants?.nodes || [],
+      storeDomain: env.PUBLIC_STORE_DOMAIN,
+      wishlistItems,
+      isLoggedIn,
       seo: {
         title: `${product.title} | APEX TOYS`,
         description: seoDescription,
@@ -197,8 +241,14 @@ export const meta = ({data}: {data: any}) => {
 };
 
 export default function Product() {
-  const {product, relatedProducts, isLocal, variants} =
-    useLoaderData<typeof loader>();
+  const {
+    product,
+    relatedProducts,
+    variants,
+    storeDomain,
+    wishlistItems = [],
+    isLoggedIn = false,
+  } = useLoaderData<typeof loader>();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('detail');
   const [quantity, setQuantity] = useState(1);
@@ -306,9 +356,9 @@ export default function Product() {
   const firstAvailableVariant = variants.find(
     (v: {availableForSale?: boolean}) => v.availableForSale,
   );
-
-  const isNew = product.tags?.includes('new');
+  const isNew = product.tags?.includes('isNew');
   const isLimited = product.tags?.includes('limited');
+  const isPreorder = product.requiresSellingPlan;
 
   return (
     <div className="bg-apex-bg text-apex-text min-h-screen">
@@ -361,20 +411,6 @@ export default function Product() {
                     </div>
                   )}
                 </div>
-                {isNew && (
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-apex-red text-white text-xs font-bold tracking-wider uppercase">
-                      NEW
-                    </span>
-                  </div>
-                )}
-                {isLimited && (
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-apex-accent-dark text-white text-xs tracking-wider uppercase">
-                      限定
-                    </span>
-                  </div>
-                )}
                 {productImages.length > 1 && (
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
                     {productImages.map((_: string, index: number) => (
@@ -510,8 +546,8 @@ export default function Product() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 w-full mb-8">
-                <div className="flex items-center border border-apex-border rounded-sm w-[148px]">
+              <div className="flex items-center gap-3 w-full mb-8">
+                <div className="flex items-center border border-apex-border rounded-sm w-28 min-w-[112px]">
                   <button
                     className="w-12 h-12 flex items-center justify-center text-apex-muted hover:text-apex-text transition-colors"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -530,64 +566,141 @@ export default function Product() {
                   >
                     +
                   </button>
-</div>
-                {isLocal ? (
-                  <>
-                    <Button
-                      variant="primary"
-                      className="flex-1 h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
-                      onClick={() => alert('カートに追加しました (デモ)')}
-                    >
-                      カートに追加
-                    </Button>
-                    <WishlistButton
-                      productId={product.id}
-                      productHandle={product.handle}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <AddToCartButton
-                      lines={[
-                        {merchandiseId: firstAvailableVariant?.id, quantity},
-                      ]}
-                      variant="primary"
-                      className="flex-1 h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
-                    >
-                      カートに追加
-                    </AddToCartButton>
-                    <WishlistButton
-                      productId={product.id}
-                      productHandle={product.handle}
-                    />
-                  </>
-                )}
-              </div>
-
-              <div className="bg-apex-section border border-apex-border rounded-sm p-5">
-                <div className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-apex-accent-dark mt-0.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.5"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                  <div>
-                    <p className="text-apex-text text-sm font-medium mb-1">
-                      予約商品について
-                    </p>
-                    <p className="text-apex-muted text-xs leading-relaxed">
-                      本商品は予約受付中です。発売時期は予告なく変更となる場合がございます。複数商品を同時にご注文の場合、発売日が最も遅い商品に合わせての発送となります。
-                    </p>
-                  </div>
                 </div>
+                <div className="flex-1">
+                  <AddToCartButton
+                    lines={[
+                      {
+                        merchandiseId: firstAvailableVariant?.id,
+                        quantity,
+                        // 只有预购商品才附加 sellingPlanId
+                        ...(product.requiresSellingPlan && {
+                          sellingPlanId:
+                            firstAvailableVariant.sellingPlanAllocations
+                              .nodes[0]?.sellingPlan.id,
+                        }),
+                      },
+                    ]}
+                    variant="primary"
+                    className="w-full h-12 bg-apex-text text-white font-medium tracking-wider uppercase text-sm hover:bg-apex-accent-dark transition-colors rounded-sm"
+                  >
+                    カートに追加
+                  </AddToCartButton>
+                </div>
+                {!product.requiresSellingPlan && firstAvailableVariant && (
+                  <ShopPayButtonCustom
+                    variantId={firstAvailableVariant.id}
+                    quantity={quantity}
+                    storeDomain={storeDomain}
+                    className="flex-shrink-0 w-[200px]"
+                  />
+                )}
+                <WishlistButton
+                  productId={product.id}
+                  productHandle={product.handle}
+                  isWishlisted={wishlistItems.includes(product.id)}
+                  isLoggedIn={isLoggedIn}
+                  className="flex-shrink-0"
+                />
+              </div>
+              <div className="bg-apex-section border border-apex-border rounded-sm p-5">
+                {isPreorder ? (
+                  <div className="flex items-start gap-3">
+                    <svg
+                      className="w-5 h-5 text-apex-accent-warm mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.5"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <div>
+                      <p className="text-apex-text text-sm font-medium mb-1">
+                        予約商品について
+                      </p>
+                      <p className="text-apex-muted text-xs leading-relaxed">
+                        本商品は予約受付中です。発売時期は予告なく変更となる場合がございます。複数商品を同時にご注文の場合、発売日が最も遅い商品に合わせての発送となります。
+                      </p>
+                    </div>
+                  </div>
+                ) : isNew ? (
+                  <div className="flex items-start gap-3">
+                    <svg
+                      className="w-5 h-5 text-apex-red mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.5"
+                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                      ></path>
+                    </svg>
+                    <div>
+                      <p className="text-apex-text text-sm font-medium mb-1">
+                        新着商品について
+                      </p>
+                      <p className="text-apex-muted text-xs leading-relaxed">
+                        本商品は新着商品です。在庫切れの場合はご注文頂けない場合がございますので予めご了承下さい。
+                      </p>
+                    </div>
+                  </div>
+                ) : isLimited ? (
+                  <div className="flex items-start gap-3">
+                    <svg
+                      className="w-5 h-5 text-apex-accent-dark mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.5"
+                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                      ></path>
+                    </svg>
+                    <div>
+                      <p className="text-apex-text text-sm font-medium mb-1">
+                        限定商品について
+                      </p>
+                      <p className="text-apex-muted text-xs leading-relaxed">
+                        本商品は数量限定商品となります。
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3">
+                    <svg
+                      className="w-5 h-5 text-apex-accent-dark mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.5"
+                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                      ></path>
+                    </svg>
+                    <div>
+                      <p className="text-apex-text text-sm font-medium mb-1">
+                        配送について
+                      </p>
+                      <p className="text-apex-muted text-xs leading-relaxed">
+                        商品はご注文確認後、2〜3営業日以内に発送いたします。
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

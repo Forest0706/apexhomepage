@@ -249,7 +249,8 @@ export function statusMessage(status: FulfillmentStatus) {
 }
 
 export const DEFAULT_LOCALE: I18nLocale = Object.freeze({
-  ...countries.default,
+  language: 'JA',
+  country: 'JP',
   pathPrefix: '',
 });
 
@@ -311,4 +312,22 @@ export function isLocalPath(url: string) {
   }
 
   return false;
+}
+
+export function buildShopPayUrlMultiple({
+  storeDomain,
+  lines,
+}: {
+  storeDomain: string;
+  lines: Array<{variantId: string; quantity: number}>;
+}) {
+  const params = new URLSearchParams();
+
+  lines.forEach(({variantId, quantity}, index) => {
+    const numericId = variantId.split('/').pop();
+    params.append(`variant_ids[${index}]`, numericId!);
+    params.append(`quantities[${index}]`, String(quantity));
+  });
+
+  return `https://shop.app/pay/${storeDomain}?${params.toString()}`;
 }

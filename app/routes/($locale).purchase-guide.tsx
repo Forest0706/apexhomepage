@@ -1,4 +1,8 @@
-import {json, type MetaArgs, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  type MetaArgs,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {getSeoMeta} from '@shopify/hydrogen';
 
@@ -13,7 +17,8 @@ export async function loader({context}: LoaderFunctionArgs) {
 export const meta = ({data}: MetaArgs<typeof loader>) => {
   return getSeoMeta({
     title: '購入ガイド | APEX TOYS',
-    description: 'APEX TOYSのはじめての方へのおすすめガイド。配送、支払い方法、キャンセルポリシーについて.',
+    description:
+      'APEX TOYSのはじめての方へのおすすめガイド。配送、支払い方法、キャンセルポリシーについて.',
   });
 };
 
@@ -23,7 +28,7 @@ export default function PurchaseGuide() {
       <h1 className="text-4xl md:text-5xl font-serif font-bold mb-8 tracking-wide text-center uppercase">
         購入ガイド
       </h1>
-      
+
       <div className="space-y-12">
         <section>
           <h2 className="text-2xl font-serif font-bold mb-4 text-[rgb(var(--apex-text))]">
@@ -52,9 +57,7 @@ export default function PurchaseGuide() {
               <li>PayPay</li>
               <li>代引現金 (代引き手数料: ¥330)</li>
             </ul>
-            <p>
-              ※全て税抜価格表示されます。结算時に消費税が加算されます。
-            </p>
+            <p>※全て税抜価格表示されます。结算時に消費税が加算されます。</p>
           </div>
         </section>
 
@@ -79,12 +82,8 @@ export default function PurchaseGuide() {
             送料について
           </h2>
           <div className="prose prose-lg max-w-none text-[rgb(var(--apex-muted))] space-y-4">
-            <p>
-              送料: 全国一律 ¥880 (沖縄県・離島を除く)
-            </p>
-            <p>
-              ¥15,000以上のご注文で送料無料
-            </p>
+            <p>送料: 全国一律 ¥880 (沖縄県・離島を除く)</p>
+            <p>¥15,000以上のご注文で送料無料</p>
           </div>
         </section>
 

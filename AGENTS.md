@@ -44,3 +44,7 @@ Required in `.env`:
 - `PUBLIC_STOREFRONT_API_TOKEN`
 
 Currently connects to `mock.shop` for demo. Update `.env` with real store credentials to switch.
+
+## AI Preference
+
+- 所有回答使用**中文**

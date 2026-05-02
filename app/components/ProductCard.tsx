@@ -28,17 +28,7 @@ interface ProductCardProps {
   className?: string;
   loading?: HTMLImageElement['loading'];
   onClick?: () => void;
-}
-
-function getShopifyProductData(product: Product) {
-  const variant = product.variants?.nodes?.[0];
-  const price = product.priceRange?.minVariantPrice || variant?.price;
-  return {
-    image: product.featuredImage?.url || variant?.image?.url,
-    title: product.title,
-    price: price || {amount: '0', currencyCode: 'JPY'},
-    handle: product.handle,
-  };
+  quickAdd?: boolean;
 }
 
 function getLocalProductData(product: LocalProduct) {
@@ -47,6 +37,26 @@ function getLocalProductData(product: LocalProduct) {
     title: product.title,
     price: product.price,
     handle: product.handle,
+    isNew: product.isNew,
+    isPreorder: product.isPreorder,
+  };
+}
+
+function getShopifyProductData(product: Product) {
+  const variant = product.variants?.nodes?.[0];
+  const price = product.priceRange?.minVariantPrice || variant?.price;
+  const tags = product.tags || [];
+
+  const isPreorder = product.requiresSellingPlan === true;
+  const isNew = tags.includes('isNew');
+
+  return {
+    image: product.featuredImage?.url || variant?.image?.url,
+    title: product.title,
+    price: price || {amount: '0', currencyCode: 'JPY'},
+    handle: product.handle,
+    isNew,
+    isPreorder,
   };
 }
 
@@ -70,7 +80,9 @@ export function ProductCard({
     ? getShopifyProductData(product as Product)
     : getLocalProductData(product as LocalProduct);
 
-  const {image, title, price, handle} = productData;
+  const {image, title, price, handle, isNew, isPreorder} = productData;
+
+  const tagLabel = isPreorder ? '予約' : isNew ? '新着' : null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -90,13 +102,18 @@ export function ProductCard({
                 View Details
               </span>
             </div>
-            {label && (
+            {(tagLabel || label) && (
               <Text
                 as="label"
                 size="fine"
-                className="absolute top-4 left-4 text-white text-xs font-bold tracking-wider uppercase bg-[rgb(var(--apex-red))] px-3 py-1"
+                className={clsx(
+                  'absolute top-4 left-4 text-white text-xs font-bold tracking-wider uppercase px-3 py-1',
+                  isPreorder
+                    ? 'bg-[rgb(var(--apex-accent-warm))]'
+                    : 'bg-[rgb(var(--apex-red))]',
+                )}
               >
-                {label}
+                {tagLabel || label}
               </Text>
             )}
           </div>
