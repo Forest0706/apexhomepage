@@ -13,6 +13,7 @@ import {Section, Text, Heading} from '~/components/Text';
 import {Cart} from '~/components/Cart';
 import {CartLoading} from '~/components/CartLoading';
 import {Drawer, useDrawer} from '~/components/Drawer';
+import {IconLogin, IconAccount} from '~/components/Icon';
 import {type EnhancedMenu, useIsHomePath} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
@@ -234,6 +235,7 @@ function MobileHeader({
               />
             </svg>
           </Link>
+          <AccountLink className="text-[#a8a29e] hover:text-[#78716c] transition-colors" />
           <CartCount isHome={isHome} openCart={openCart} />
         </div>
       </div>
@@ -319,6 +321,7 @@ function DesktopHeader({
                 />
               </svg>
             </Link>
+            <AccountLink className="text-[#a8a29e] hover:text-[#78716c] transition-colors" />
             <CartCount isHome={isHome} openCart={openCart} />
           </div>
         </div>
@@ -492,28 +495,28 @@ function Footer() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/purchase-guide"
                   className="text-[#a8a29e] hover:text-[#78716c] transition-colors text-sm"
                 >
                   購入ガイド
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/after-service"
                   className="text-[#a8a29e] hover:text-[#78716c] transition-colors text-sm"
                 >
                   アフターサービス
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/faq"
                   className="text-[#a8a29e] hover:text-[#78716c] transition-colors text-sm"
                 >
                   よくある質問
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
