@@ -9,6 +9,42 @@ import {Link} from '~/components/Link';
 import {translations} from '~/data/translations';
 import {NewsletterForm} from '~/components/NewsletterForm';
 
+const HOMEPAGE_FEATURED_COLLECTION_QUERY = `#graphql
+  query HomepageFeaturedCollection(
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    shop {
+      metafield(namespace: "homepage", key: "featured_collection") {
+        reference {
+          ... on Collection {
+            id
+            title
+            handle
+            # ✅ 系列封面图
+            image {
+              url
+              altText
+              width
+              height
+            }
+            character: metafield(namespace: "series", key: "character") {
+              value
+            }
+            scale: metafield(namespace: "series", key: "scale") {
+              value
+            }
+            material: metafield(namespace: "series", key: "material") {
+              value
+            }
+            description
+          }
+        }
+      }
+    }
+  }
+`;
+
 export async function loader({context: {storefront}}: LoaderFunctionArgs) {
   const t = translations.ja;
   const collectionResult = await storefront
@@ -22,8 +58,29 @@ export async function loader({context: {storefront}}: LoaderFunctionArgs) {
     .catch((err) => {
       return {products: {nodes: LOCAL_PRODUCTS}};
     });
+
+  const featuredData = await storefront
+    .query(HOMEPAGE_FEATURED_COLLECTION_QUERY, {
+      variables: {
+        country: storefront.i18n.country,
+        language: storefront.i18n.language,
+      },
+    })
+    .catch(() => {
+      return {shop: {metafield: null}};
+    });
+
+  const collectionRef = featuredData?.shop?.metafield?.reference;
+  const seriesMeta = {
+    character: collectionRef?.character?.value || '',
+    scale: collectionRef?.scale?.value || '',
+    material: collectionRef?.material?.value || '',
+  };
+
   return defer({
     products: collectionResult.collection?.products?.nodes || LOCAL_PRODUCTS,
+    collectionRef,
+    seriesMeta,
     t,
     seo: {
       title: 'APEX TOYS | 高級フィギュア専門店',
@@ -37,7 +94,13 @@ export const meta = ({data}: {data: any}) => {
 };
 
 export default function Homepage() {
-  const {products, t} = useLoaderData<typeof loader>();
+  const {
+    products,
+    collectionRef = {},
+    seriesMeta = {},
+    t,
+  } = useLoaderData<typeof loader>();
+  const {character = '', scale = '', material = ''} = seriesMeta;
 
   return (
     <div className="bg-[#fafaf9] text-[#292524]">
@@ -163,33 +226,37 @@ export default function Homepage() {
                 {t.series.sectionTitle}
               </p>
               <h2 className="text-4xl sm:text-5xl font-serif font-bold mb-8">
-                {t.series.title}
+                {collectionRef.title}
               </h2>
               <p className="text-[#a8a29e] text-lg leading-relaxed mb-10 font-light">
-                {t.series.description}
+                {collectionRef.description}
               </p>
               <div className="grid grid-cols-3 gap-8 mb-10">
                 <div className="text-center">
-                  <p className="text-3xl font-serif font-bold">20+</p>
+                  <p className="text-3xl font-serif font-bold">{character}</p>
                   <p className="text-[#a8a29e] text-xs tracking-wider uppercase">
                     {t.series.stats.characters}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-serif font-bold">1/7</p>
+                  <p className="text-3xl font-serif font-bold">{scale}</p>
                   <p className="text-[#a8a29e] text-xs tracking-wider uppercase">
                     {t.series.stats.scale}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-serif font-bold">PVC</p>
+                  <p className="text-3xl font-serif font-bold">{material}</p>
                   <p className="text-[#a8a29e] text-xs tracking-wider uppercase">
                     {t.series.stats.material}
                   </p>
                 </div>
               </div>
               <Link
-                to="/products"
+                to={
+                  collectionRef?.handle
+                    ? `/products?category=${collectionRef.handle}`
+                    : '/products'
+                }
                 className="inline-flex items-center space-x-2 border border-[#78716c] text-[#78716c] px-8 py-4 hover:bg-[#78716c] hover:text-white transition-all tracking-widest uppercase text-sm"
               >
                 <span>{t.series.cta}</span>
@@ -209,15 +276,25 @@ export default function Homepage() {
               </Link>
             </div>
             <div className="relative">
-              <div className="aspect-[4/5] bg-gradient-to-br from-stone-200 via-stone-300 to-stone-400 rounded-sm flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22%2378716c%22%20fill-opacity%3D%220.05%22%20fill-rule%3D%22evenodd%22%3E%3Cpath%20d%3D%22M0%2040L40%200H20L0%2020M40%2040V20L20%2040%22/%3E%3C/g%3E%3C/svg%3E')]" />
-                <div className="text-center z-10">
-                  <div className="w-32 h-32 mx-auto mb-6 border-2 border-[#9ca3af]/15 rounded-full flex items-center justify-center bg-white/40">
-                    <span className="text-6xl">🐰</span>
+              {collectionRef.image ? (
+                <img
+                  src={collectionRef.image.url}
+                  alt={collectionRef.image.altText || collectionRef.title}
+                  width={collectionRef.image.width}
+                  height={collectionRef.image.height}
+                  className="w-full h-full object-cover rounded-sm"
+                />
+              ) : (
+                <div className="aspect-[4/5] bg-gradient-to-br from-stone-200 via-stone-300 to-stone-400 rounded-sm flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22%2378716c%22%20fill-opacity%3D%220.05%22%20fill-rule%3D%22evenodd%22%3E%3Cpath%20d%3D%22M0%2040L40%200H20L0%2020M40%2040V20L20%2040%22/%3E%3C/g%3E%3C/svg%3E')]" />
+                  <div className="text-center z-10">
+                    <div className="w-32 h-32 mx-auto mb-6 border-2 border-[#9ca3af]/15 rounded-full flex items-center justify-center bg-white/40">
+                      <span className="text-6xl">🐰</span>
+                    </div>
+                    <p className="text-[#a8a29e]">Series Key Visual</p>
                   </div>
-                  <p className="text-[#a8a29e]">Series Key Visual</p>
                 </div>
-              </div>
+              )}
               <div className="absolute -bottom-6 -right-6 w-48 h-48 border border-[#9ca3af]/15 rounded-sm hidden lg:block" />
               <div className="absolute -top-6 -left-6 w-32 h-32 border border-[#9ca3af]/10 rounded-sm hidden lg:block" />
             </div>
