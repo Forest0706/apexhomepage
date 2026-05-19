@@ -79,6 +79,10 @@ export const PRODUCT_QUERY = `#graphql
         value
         type
       }
+      material: metafield(namespace: "specs", key: "material") {
+        value
+        type
+      }
       collections(first: 5) {
         nodes {
           id

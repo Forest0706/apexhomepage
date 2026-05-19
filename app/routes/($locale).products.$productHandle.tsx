@@ -24,6 +24,10 @@ type ShopifyProduct = {
     value: string;
     type: string;
   };
+  material: {
+    value: string;
+    type: string;
+  };
   height: {
     value: string;
     type: string;
@@ -112,6 +116,7 @@ function adaptShopifyProduct(product: ShopifyProduct) {
     specs: {
       scale: product.scale?.value,
       height: product.height?.value,
+      material: product.material?.value,
       releaseDate: product.releaseDate?.value,
     },
     tags: product.tags || [],
@@ -538,7 +543,9 @@ export default function Product() {
                     {product.specs?.height || '約260mm'}
                   </div>
                   <div className="text-apex-muted">素材</div>
-                  <div className="text-apex-text">PVC・ABS</div>
+                  <div className="text-apex-text">
+                    {product.specs?.material || 'PVC・ABS'}
+                  </div>
                   <div className="text-apex-muted">発売時期</div>
                   <div className="text-apex-text">
                     {product.specs?.releaseDate || '2025年12月予定'}
