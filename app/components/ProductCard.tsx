@@ -79,7 +79,6 @@ export function ProductCard({
   const productData = isShopify
     ? getShopifyProductData(product as Product)
     : getLocalProductData(product as LocalProduct);
-
   const {image, title, price, handle, isNew, isPreorder} = productData;
 
   const tagLabel = isPreorder ? '予約' : isNew ? '新着' : null;

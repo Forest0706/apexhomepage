@@ -58,7 +58,6 @@ export async function loader({context: {storefront}}: LoaderFunctionArgs) {
     .catch((err) => {
       return {products: {nodes: LOCAL_PRODUCTS}};
     });
-
   const featuredData = await storefront
     .query(HOMEPAGE_FEATURED_COLLECTION_QUERY, {
       variables: {
@@ -78,7 +77,8 @@ export async function loader({context: {storefront}}: LoaderFunctionArgs) {
   };
 
   return defer({
-    products: collectionResult.collection?.products?.nodes || LOCAL_PRODUCTS,
+    products:
+      collectionResult.shop?.metafield?.references?.edges || LOCAL_PRODUCTS,
     collectionRef,
     seriesMeta,
     t,
@@ -181,8 +181,8 @@ export default function Homepage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {products.slice(0, 6).map((product: any, index: number) => (
               <ProductCard
-                key={product.id}
-                product={product}
+                key={product.node?.id}
+                product={product.node}
                 className="card-hover group"
               />
             ))}
