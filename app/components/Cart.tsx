@@ -16,6 +16,7 @@ import type {
   CartLine,
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
+import {useRouteLoaderData} from '@remix-run/react';
 
 import {Button} from '~/components/Button';
 import {Text, Heading} from '~/components/Text';
@@ -184,6 +185,20 @@ function CartLines({
 }
 
 function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
+  const rootData = useRouteLoaderData<typeof import('~/root').loader>('root');
+  const shop = rootData?.layout?.shop;
+
+  const policyLinks = [
+    shop?.shippingPolicy && {
+      to: `/policies/${shop.shippingPolicy.handle}`,
+      label: shop.shippingPolicy.title,
+    },
+    shop?.refundPolicy && {
+      to: `/policies/${shop.refundPolicy.handle}`,
+      label: shop.refundPolicy.title,
+    },
+  ].filter(Boolean) as {to: string; label: string}[];
+
   if (!checkoutUrl) return null;
 
   return (
@@ -193,7 +208,19 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
           Continue to Checkout
         </Button>
       </a>
-      {/* @todo: <CartShopPayButton cart={cart} /> */}
+      {policyLinks.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-3">
+          {policyLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="text-[#a8a29e] hover:text-[#292524] text-xs transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

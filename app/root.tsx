@@ -33,6 +33,8 @@ import styles from '~/styles/app.css?url';
 import favicon from '~/assets/favicon.png';
 
 import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
+import {createBloyClient} from './lib/bloy.server';
+import {CUSTOMER_EMAIL_QUERY} from '~/graphql/customer-account/CustomerEmailQuery';
 
 export type RootLoader = typeof loader;
 
@@ -104,9 +106,15 @@ function getFallbackLayout() {
       description: 'Apex Toys Store',
       primaryDomain: {url: 'https://localhost:3000'},
       brand: {logo: null},
+      privacyPolicy: null,
+      termsOfService: null,
+      refundPolicy: null,
+      shippingPolicy: null,
+      subscriptionPolicy: null,
     },
     headerMenu: undefined,
     footerMenu: undefined,
+    legalNotice: null,
   };
 }
 
@@ -163,11 +171,26 @@ async function loadCriticalData({request, context}: LoaderFunctionArgs) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
 function loadDeferredData({context}: LoaderFunctionArgs) {
-  const {cart, customerAccount} = context;
+  const {cart, customerAccount, env} = context;
+
+  const bloyCustomer = customerAccount.isLoggedIn().then(async (loggedIn) => {
+    if (!loggedIn) return null;
+    try {
+      const bloy = createBloyClient(env.BLOY_API_KEY);
+      if (!bloy) return null;
+      const {customer} = await customerAccount.query(CUSTOMER_EMAIL_QUERY);
+      const email = customer?.emailAddress?.emailAddress;
+      if (!email) return null;
+      return bloy.getCustomerByEmail(email);
+    } catch {
+      return null;
+    }
+  });
 
   return {
     isLoggedIn: customerAccount.isLoggedIn(),
     cart: cart.get(),
+    bloyCustomer,
   };
 }
 
@@ -275,6 +298,9 @@ const LAYOUT_QUERY = `#graphql
     footerMenu: menu(handle: $footerMenuHandle) {
       ...Menu
     }
+    legalNotice: page(handle: "legal-notice") {
+      handle
+    }
   }
   fragment Shop on Shop {
     id
@@ -289,6 +315,26 @@ const LAYOUT_QUERY = `#graphql
           url
         }
       }
+    }
+    privacyPolicy {
+      title
+      handle
+    }
+    termsOfService {
+      title
+      handle
+    }
+    refundPolicy {
+      title
+      handle
+    }
+    shippingPolicy {
+      title
+      handle
+    }
+    subscriptionPolicy {
+      title
+      handle
     }
   }
   fragment MenuItem on MenuItem {
@@ -355,5 +401,5 @@ async function getLayoutData({storefront, env}: AppLoadContext) {
       )
     : undefined;
 
-  return {shop: data.shop, headerMenu, footerMenu};
+  return {shop: data.shop, headerMenu, footerMenu, legalNotice: data.legalNotice};
 }

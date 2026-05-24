@@ -29,6 +29,8 @@ declare global {
     PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
     PUBLIC_CHECKOUT_DOMAIN: string;
     SHOP_ID: string;
+    BLOY_API_KEY: string;
+    PUBLIC_BLOY_EARN_POINTS_ENABLED: string;
   }
 }
 
@@ -42,6 +44,7 @@ declare module '@shopify/remix-oxygen' {
     storefront: Storefront;
     customerAccount: CustomerAccount;
     cart: HydrogenCart;
+    admin: (query: string, variables?: Record<string, any>) => Promise<any>;
     env: Env;
   }
 

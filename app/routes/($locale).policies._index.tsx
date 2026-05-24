@@ -34,6 +34,7 @@ export async function loader({
 
   return json({
     policies,
+    legalNotice: data.legalNotice,
     seo,
   });
 }
@@ -43,11 +44,12 @@ export const meta = ({matches}: MetaArgs<typeof loader>) => {
 };
 
 export default function Policies() {
-  const {policies} = useLoaderData<typeof loader>();
+  const {policies, legalNotice} = useLoaderData<typeof loader>();
 
   return (
     <>
-      <PageHeader heading="Policies" />
+      <div className="pt-nav">
+        <PageHeader heading="Policies" />
       <Section padding="x" className="mb-24">
         {policies.map((policy) => {
           return (
@@ -58,7 +60,13 @@ export default function Policies() {
             )
           );
         })}
+        {legalNotice && (
+          <Heading className="font-normal text-heading">
+            <Link to="/pages/legal-notice">特定商取引法に基づく表記</Link>
+          </Heading>
+        )}
       </Section>
+      </div>
     </>
   );
 }
@@ -89,6 +97,9 @@ const POLICIES_QUERY = `#graphql
         title
         handle
       }
+    }
+    legalNotice: page(handle: "legal-notice") {
+      handle
     }
   }
 `;

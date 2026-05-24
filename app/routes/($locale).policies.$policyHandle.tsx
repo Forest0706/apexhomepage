@@ -8,7 +8,7 @@ import invariant from 'tiny-invariant';
 import {getSeoMeta} from '@shopify/hydrogen';
 
 import {PageHeader, Section} from '~/components/Text';
-import {Button} from '~/components/Button';
+import {Link} from '~/components/Link';
 import {routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
 
@@ -20,7 +20,7 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
   const policyName = params.policyHandle.replace(
     /-([a-z])/g,
     (_: unknown, m1: string) => m1.toUpperCase(),
-  ) as 'privacyPolicy' | 'shippingPolicy' | 'termsOfService' | 'refundPolicy';
+  ) as 'privacyPolicy' | 'shippingPolicy' | 'termsOfService' | 'refundPolicy' | 'subscriptionPolicy';
 
   const data = await context.storefront.query(POLICY_CONTENT_QUERY, {
     variables: {
@@ -28,6 +28,7 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
       shippingPolicy: false,
       termsOfService: false,
       refundPolicy: false,
+      subscriptionPolicy: false,
       [policyName]: true,
       language: context.storefront.i18n.language,
     },
@@ -53,7 +54,7 @@ export default function Policies() {
   const {policy} = useLoaderData<typeof loader>();
 
   return (
-    <>
+    <div className="pt-nav">
       <Section
         padding="all"
         display="flex"
@@ -63,13 +64,12 @@ export default function Policies() {
           heading={policy.title}
           className="grid items-start flex-grow gap-4 md:sticky top-36 md:w-5/12"
         >
-          <Button
-            className="justify-self-start"
-            variant="inline"
+          <Link
+            className="justify-self-start border-b border-primary/10 leading-none pb-1 hover:border-primary/30"
             to={'/policies'}
           >
             &larr; Back to Policies
-          </Button>
+          </Link>
         </PageHeader>
         <div className="flex-grow w-full md:w-7/12">
           <div
@@ -78,7 +78,7 @@ export default function Policies() {
           />
         </div>
       </Section>
-    </>
+    </div>
   );
 }
 
@@ -97,6 +97,7 @@ const POLICY_CONTENT_QUERY = `#graphql
     $shippingPolicy: Boolean!
     $termsOfService: Boolean!
     $refundPolicy: Boolean!
+    $subscriptionPolicy: Boolean!
   ) @inContext(language: $language) {
     shop {
       privacyPolicy @include(if: $privacyPolicy) {
@@ -110,6 +111,13 @@ const POLICY_CONTENT_QUERY = `#graphql
       }
       refundPolicy @include(if: $refundPolicy) {
         ...PolicyHandle
+      }
+      subscriptionPolicy @include(if: $subscriptionPolicy) {
+        body
+        handle
+        id
+        title
+        url
       }
     }
   }

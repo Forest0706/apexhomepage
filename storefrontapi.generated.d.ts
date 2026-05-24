@@ -110,6 +110,21 @@ export type LayoutQuery = {
         image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>>;
       }>;
     }>;
+    privacyPolicy?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.ShopPolicy, 'title' | 'handle'>
+    >;
+    termsOfService?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.ShopPolicy, 'title' | 'handle'>
+    >;
+    refundPolicy?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.ShopPolicy, 'title' | 'handle'>
+    >;
+    shippingPolicy?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.ShopPolicy, 'title' | 'handle'>
+    >;
+    subscriptionPolicy?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.ShopPolicyWithDefault, 'title' | 'handle'>
+    >;
   };
   headerMenu?: StorefrontAPI.Maybe<
     Pick<StorefrontAPI.Menu, 'id'> & {
@@ -145,6 +160,7 @@ export type LayoutQuery = {
       >;
     }
   >;
+  legalNotice?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Page, 'handle'>>;
 };
 
 export type ShopFragment = Pick<
@@ -157,6 +173,21 @@ export type ShopFragment = Pick<
       image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>>;
     }>;
   }>;
+  privacyPolicy?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.ShopPolicy, 'title' | 'handle'>
+  >;
+  termsOfService?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.ShopPolicy, 'title' | 'handle'>
+  >;
+  refundPolicy?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.ShopPolicy, 'title' | 'handle'>
+  >;
+  shippingPolicy?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.ShopPolicy, 'title' | 'handle'>
+  >;
+  subscriptionPolicy?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.ShopPolicyWithDefault, 'title' | 'handle'>
+  >;
 };
 
 export type MenuItemFragment = Pick<
@@ -203,6 +234,35 @@ export type GetShopPrimaryDomainQueryVariables = StorefrontAPI.Exact<{
 
 export type GetShopPrimaryDomainQuery = {
   shop: {primaryDomain: Pick<StorefrontAPI.Domain, 'url'>};
+};
+
+export type HomepageFeaturedCollectionQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+}>;
+
+export type HomepageFeaturedCollectionQuery = {
+  shop: {
+    metafield?: StorefrontAPI.Maybe<{
+      reference?: StorefrontAPI.Maybe<
+        Pick<
+          StorefrontAPI.Collection,
+          'id' | 'title' | 'handle' | 'description'
+        > & {
+          image?: StorefrontAPI.Maybe<
+            Pick<StorefrontAPI.Image, 'url' | 'altText' | 'width' | 'height'>
+          >;
+          character?: StorefrontAPI.Maybe<
+            Pick<StorefrontAPI.Metafield, 'value'>
+          >;
+          scale?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Metafield, 'value'>>;
+          material?: StorefrontAPI.Maybe<
+            Pick<StorefrontAPI.Metafield, 'value'>
+          >;
+        }
+      >;
+    }>;
+  };
 };
 
 export type ApiAllProductsQueryVariables = StorefrontAPI.Exact<{
@@ -525,6 +585,7 @@ export type PoliciesHandleQueryVariables = StorefrontAPI.Exact<{
   shippingPolicy: StorefrontAPI.Scalars['Boolean']['input'];
   termsOfService: StorefrontAPI.Scalars['Boolean']['input'];
   refundPolicy: StorefrontAPI.Scalars['Boolean']['input'];
+  subscriptionPolicy: StorefrontAPI.Scalars['Boolean']['input'];
 }>;
 
 export type PoliciesHandleQuery = {
@@ -540,6 +601,12 @@ export type PoliciesHandleQuery = {
     >;
     refundPolicy?: StorefrontAPI.Maybe<
       Pick<StorefrontAPI.ShopPolicy, 'body' | 'handle' | 'id' | 'title' | 'url'>
+    >;
+    subscriptionPolicy?: StorefrontAPI.Maybe<
+      Pick<
+        StorefrontAPI.ShopPolicyWithDefault,
+        'body' | 'handle' | 'id' | 'title' | 'url'
+      >
     >;
   };
 };
@@ -571,6 +638,7 @@ export type PoliciesIndexQuery = {
       Pick<StorefrontAPI.ShopPolicyWithDefault, 'id' | 'title' | 'handle'>
     >;
   };
+  legalNotice?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Page, 'handle'>>;
 };
 
 export type PaginatedProductsSearchQueryVariables = StorefrontAPI.Exact<{
@@ -633,13 +701,17 @@ export type CustomerUpdateWishlistMutation = {
 };
 
 interface GeneratedQueryTypes {
-  '#graphql\n  query layout(\n    $language: LanguageCode\n    $headerMenuHandle: String!\n    $footerMenuHandle: String!\n  ) @inContext(language: $language) {\n    shop {\n      ...Shop\n    }\n    headerMenu: menu(handle: $headerMenuHandle) {\n      ...Menu\n    }\n    footerMenu: menu(handle: $footerMenuHandle) {\n      ...Menu\n    }\n  }\n  fragment Shop on Shop {\n    id\n    name\n    description\n    primaryDomain {\n      url\n    }\n    brand {\n      logo {\n        image {\n          url\n        }\n      }\n    }\n  }\n  fragment MenuItem on MenuItem {\n    id\n    resourceId\n    tags\n    title\n    type\n    url\n  }\n  fragment ChildMenuItem on MenuItem {\n    ...MenuItem\n  }\n  fragment ParentMenuItem on MenuItem {\n    ...MenuItem\n    items {\n      ...ChildMenuItem\n    }\n  }\n  fragment Menu on Menu {\n    id\n    items {\n      ...ParentMenuItem\n    }\n  }\n': {
+  '#graphql\n  query layout(\n    $language: LanguageCode\n    $headerMenuHandle: String!\n    $footerMenuHandle: String!\n  ) @inContext(language: $language) {\n    shop {\n      ...Shop\n    }\n    headerMenu: menu(handle: $headerMenuHandle) {\n      ...Menu\n    }\n    footerMenu: menu(handle: $footerMenuHandle) {\n      ...Menu\n    }\n    legalNotice: page(handle: "legal-notice") {\n      handle\n    }\n  }\n  fragment Shop on Shop {\n    id\n    name\n    description\n    primaryDomain {\n      url\n    }\n    brand {\n      logo {\n        image {\n          url\n        }\n      }\n    }\n    privacyPolicy {\n      title\n      handle\n    }\n    termsOfService {\n      title\n      handle\n    }\n    refundPolicy {\n      title\n      handle\n    }\n    shippingPolicy {\n      title\n      handle\n    }\n    subscriptionPolicy {\n      title\n      handle\n    }\n  }\n  fragment MenuItem on MenuItem {\n    id\n    resourceId\n    tags\n    title\n    type\n    url\n  }\n  fragment ChildMenuItem on MenuItem {\n    ...MenuItem\n  }\n  fragment ParentMenuItem on MenuItem {\n    ...MenuItem\n    items {\n      ...ChildMenuItem\n    }\n  }\n  fragment Menu on Menu {\n    id\n    items {\n      ...ParentMenuItem\n    }\n  }\n': {
     return: LayoutQuery;
     variables: LayoutQueryVariables;
   };
   '#graphql\n      query getShopPrimaryDomain { shop { primaryDomain { url } } }\n    ': {
     return: GetShopPrimaryDomainQuery;
     variables: GetShopPrimaryDomainQueryVariables;
+  };
+  '#graphql\n  query HomepageFeaturedCollection(\n    $country: CountryCode\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    shop {\n      metafield(namespace: "homepage", key: "featured_collection") {\n        reference {\n          ... on Collection {\n            id\n            title\n            handle\n            # ✅ 系列封面图\n            image {\n              url\n              altText\n              width\n              height\n            }\n            character: metafield(namespace: "series", key: "character") {\n              value\n            }\n            scale: metafield(namespace: "series", key: "scale") {\n              value\n            }\n            material: metafield(namespace: "series", key: "material") {\n              value\n            }\n            description\n          }\n        }\n      }\n    }\n  }\n': {
+    return: HomepageFeaturedCollectionQuery;
+    variables: HomepageFeaturedCollectionQueryVariables;
   };
   '#graphql\n  query ApiAllProducts(\n    $query: String\n    $count: Int\n    $reverse: Boolean\n    $country: CountryCode\n    $language: LanguageCode\n    $sortKey: ProductSortKeys\n  ) @inContext(country: $country, language: $language) {\n    products(first: $count, sortKey: $sortKey, reverse: $reverse, query: $query) {\n      nodes {\n        ...ProductCard\n      }\n    }\n  }\n  #graphql\n  fragment ProductCard on Product {\n    id\n    title\n    publishedAt\n    handle\n    vendor\n    tags\n    requiresSellingPlan\n    variants(first: 1) {\n      nodes {\n        id\n        availableForSale\n        image {\n          url\n          altText\n          width\n          height\n        }\n        price {\n          amount\n          currencyCode\n        }\n        compareAtPrice {\n          amount\n          currencyCode\n        }\n        selectedOptions {\n          name\n          value\n        }\n        product {\n          handle\n          title\n        }\n      }\n    }\n  }\n\n': {
     return: ApiAllProductsQuery;
@@ -669,11 +741,11 @@ interface GeneratedQueryTypes {
     return: PageDetailsQuery;
     variables: PageDetailsQueryVariables;
   };
-  '#graphql\n  fragment PolicyHandle on ShopPolicy {\n    body\n    handle\n    id\n    title\n    url\n  }\n\n  query PoliciesHandle(\n    $language: LanguageCode\n    $privacyPolicy: Boolean!\n    $shippingPolicy: Boolean!\n    $termsOfService: Boolean!\n    $refundPolicy: Boolean!\n  ) @inContext(language: $language) {\n    shop {\n      privacyPolicy @include(if: $privacyPolicy) {\n        ...PolicyHandle\n      }\n      shippingPolicy @include(if: $shippingPolicy) {\n        ...PolicyHandle\n      }\n      termsOfService @include(if: $termsOfService) {\n        ...PolicyHandle\n      }\n      refundPolicy @include(if: $refundPolicy) {\n        ...PolicyHandle\n      }\n    }\n  }\n': {
+  '#graphql\n  fragment PolicyHandle on ShopPolicy {\n    body\n    handle\n    id\n    title\n    url\n  }\n\n  query PoliciesHandle(\n    $language: LanguageCode\n    $privacyPolicy: Boolean!\n    $shippingPolicy: Boolean!\n    $termsOfService: Boolean!\n    $refundPolicy: Boolean!\n    $subscriptionPolicy: Boolean!\n  ) @inContext(language: $language) {\n    shop {\n      privacyPolicy @include(if: $privacyPolicy) {\n        ...PolicyHandle\n      }\n      shippingPolicy @include(if: $shippingPolicy) {\n        ...PolicyHandle\n      }\n      termsOfService @include(if: $termsOfService) {\n        ...PolicyHandle\n      }\n      refundPolicy @include(if: $refundPolicy) {\n        ...PolicyHandle\n      }\n      subscriptionPolicy @include(if: $subscriptionPolicy) {\n        body\n        handle\n        id\n        title\n        url\n      }\n    }\n  }\n': {
     return: PoliciesHandleQuery;
     variables: PoliciesHandleQueryVariables;
   };
-  '#graphql\n  fragment PolicyIndex on ShopPolicy {\n    id\n    title\n    handle\n  }\n\n  query PoliciesIndex {\n    shop {\n      privacyPolicy {\n        ...PolicyIndex\n      }\n      shippingPolicy {\n        ...PolicyIndex\n      }\n      termsOfService {\n        ...PolicyIndex\n      }\n      refundPolicy {\n        ...PolicyIndex\n      }\n      subscriptionPolicy {\n        id\n        title\n        handle\n      }\n    }\n  }\n': {
+  '#graphql\n  fragment PolicyIndex on ShopPolicy {\n    id\n    title\n    handle\n  }\n\n  query PoliciesIndex {\n    shop {\n      privacyPolicy {\n        ...PolicyIndex\n      }\n      shippingPolicy {\n        ...PolicyIndex\n      }\n      termsOfService {\n        ...PolicyIndex\n      }\n      refundPolicy {\n        ...PolicyIndex\n      }\n      subscriptionPolicy {\n        id\n        title\n        handle\n      }\n    }\n    legalNotice: page(handle: "legal-notice") {\n      handle\n    }\n  }\n': {
     return: PoliciesIndexQuery;
     variables: PoliciesIndexQueryVariables;
   };

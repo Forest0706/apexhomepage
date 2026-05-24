@@ -1,5 +1,5 @@
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, useRouteLoaderData} from '@remix-run/react';
 import {getSeoMeta} from '@shopify/hydrogen';
 
 import {LOCAL_PRODUCTS} from '~/data/localProducts';
@@ -45,7 +45,7 @@ const HOMEPAGE_FEATURED_COLLECTION_QUERY = `#graphql
   }
 `;
 
-export async function loader({context: {storefront}}: LoaderFunctionArgs) {
+export async function loader({context: {storefront, env}}: LoaderFunctionArgs) {
   const t = translations.ja;
   const collectionResult = await storefront
     .query(HOMEPAGE_PRODUCTS_QUERY, {
@@ -86,6 +86,7 @@ export async function loader({context: {storefront}}: LoaderFunctionArgs) {
       title: 'APEX TOYS | 高級フィギュア専門店',
       description: '限定特典グッズと高品質フィギュアのコレクション',
     },
+    earnPointsEnabled: env.PUBLIC_BLOY_EARN_POINTS_ENABLED !== 'false',
   });
 }
 
@@ -99,6 +100,7 @@ export default function Homepage() {
     collectionRef = {},
     seriesMeta = {},
     t,
+    earnPointsEnabled = true,
   } = useLoaderData<typeof loader>();
   const {character = '', scale = '', material = ''} = seriesMeta;
 
@@ -404,6 +406,27 @@ export default function Homepage() {
         placeholder={t.newsletter.placeholder}
         buttonText={t.newsletter.button}
       />
+
+      {/* Legal Notice — 日本の特定商取引法に基づく表記 */}
+      <LegalNotice />
     </div>
+  );
+}
+
+function LegalNotice() {
+  const rootData = useRouteLoaderData<typeof import('~/root').loader>('root');
+  if (!rootData?.layout?.legalNotice) return null;
+
+  return (
+    <section className="py-8 border-t border-[#e7e5e4] bg-[#fafaf9]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <Link
+          to="/pages/legal-notice"
+          className="text-[#a8a29e] hover:text-[#292524] text-xs tracking-wider transition-colors"
+        >
+          特定商取引法に基づく表記
+        </Link>
+      </div>
+    </section>
   );
 }

@@ -72,6 +72,21 @@ export default {
         setCartId: cartSetIdDefault(),
       });
 
+      const admin = async (query: string, variables?: Record<string, any>) => {
+        const response = await fetch(
+          `https://${env.PUBLIC_STORE_DOMAIN}/admin/api/2025-01/graphql.json`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Shopify-Access-Token': env.PRIVATE_STOREFRONT_API_TOKEN,
+            },
+            body: JSON.stringify({query, variables}),
+          },
+        );
+        return response.json();
+      };
+
       /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
@@ -85,6 +100,7 @@ export default {
           storefront,
           customerAccount,
           cart,
+          admin,
           env,
         }),
       });

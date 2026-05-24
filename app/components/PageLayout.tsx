@@ -47,7 +47,7 @@ export function PageLayout({children, layout}: LayoutProps) {
           {children}
         </main>
       </div>
-      {!hideLayout && <Footer />}
+      {!hideLayout && <Footer shop={layout?.shop} legalNotice={layout?.legalNotice} />}
     </>
   );
 }
@@ -335,10 +335,23 @@ function AccountLink({className}: {className?: string}) {
   const isLoggedIn = rootData?.isLoggedIn;
 
   return (
-    <Link to="/account" className={className}>
+    <Link to="/account" className={`relative ${className || ''}`}>
       <Suspense fallback={<IconLogin />}>
         <Await resolve={isLoggedIn} errorElement={<IconLogin />}>
           {(isLoggedIn) => (isLoggedIn ? <IconAccount /> : <IconLogin />)}
+        </Await>
+      </Suspense>
+      <Suspense fallback={null}>
+        <Await resolve={rootData?.bloyCustomer} errorElement={null}>
+          {(bloyCustomer) =>
+            bloyCustomer?.points > 0 ? (
+              <div className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] bg-[#5a31f4] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1">
+                {bloyCustomer.points > 999
+                  ? '999+'
+                  : bloyCustomer.points}
+              </div>
+            ) : null
+          }
         </Await>
       </Suspense>
     </Link>
@@ -424,9 +437,32 @@ function Badge({
   );
 }
 
-function Footer() {
+function Footer({shop, legalNotice}: {shop?: LayoutQuery['shop']; legalNotice?: {handle: string} | null}) {
   const isHome = useIsHomePath();
   const currentYear = new Date().getFullYear();
+
+  const policyLinks = [
+    shop?.privacyPolicy && {
+      to: `/policies/${shop.privacyPolicy.handle}`,
+      label: shop.privacyPolicy.title,
+    },
+    shop?.termsOfService && {
+      to: `/policies/${shop.termsOfService.handle}`,
+      label: shop.termsOfService.title,
+    },
+    shop?.refundPolicy && {
+      to: `/policies/${shop.refundPolicy.handle}`,
+      label: shop.refundPolicy.title,
+    },
+    shop?.shippingPolicy && {
+      to: `/policies/${shop.shippingPolicy.handle}`,
+      label: shop.shippingPolicy.title,
+    },
+    shop?.subscriptionPolicy && {
+      to: `/policies/${shop.subscriptionPolicy.handle}`,
+      label: shop.subscriptionPolicy.title,
+    },
+  ].filter(Boolean) as {to: string; label: string}[];
 
   return (
     <footer className="bg-[#f5f5f4] pt-16 pb-10 border-t border-[#e7e5e4]">
@@ -533,20 +569,27 @@ function Footer() {
           <p className="text-[#a8a29e] text-xs tracking-wider">
             &copy; {currentYear} Apex-Toys. All rights reserved.
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <a
-              href="#"
-              className="text-[#a8a29e] hover:text-[#292524] text-xs transition-colors"
-            >
-              プライバシーポリシー
-            </a>
-            <a
-              href="#"
-              className="text-[#a8a29e] hover:text-[#292524] text-xs transition-colors"
-            >
-              利用規約
-            </a>
-          </div>
+          {policyLinks.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-4 md:mt-0">
+              {policyLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="text-[#a8a29e] hover:text-[#292524] text-xs transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              {legalNotice && (
+                <Link
+                  to="/pages/legal-notice"
+                  className="text-[#a8a29e] hover:text-[#292524] text-xs transition-colors"
+                >
+                  特定商取引法に基づく表記
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </footer>

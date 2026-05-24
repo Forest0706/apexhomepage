@@ -3,6 +3,8 @@ import type {Product} from '@shopify/hydrogen/storefront-api-types';
 
 import {Text} from '~/components/Text';
 import {Link} from '~/components/Link';
+import {calculateEarnPoints} from '~/lib/bloy.utils';
+import {translations} from '~/data/translations';
 
 type LocalProduct = {
   id: string;
@@ -29,6 +31,7 @@ interface ProductCardProps {
   loading?: HTMLImageElement['loading'];
   onClick?: () => void;
   quickAdd?: boolean;
+  showEarnPoints?: boolean;
 }
 
 function getLocalProductData(product: LocalProduct) {
@@ -74,6 +77,7 @@ export function ProductCard({
   className,
   loading,
   onClick,
+  showEarnPoints = true,
 }: ProductCardProps) {
   const isShopify = 'priceRange' in product;
   const productData = isShopify
@@ -126,6 +130,11 @@ export function ProductCard({
             <Text className="flex gap-4 text-[rgb(var(--apex-accent-dark))] font-serif text-xl">
               {price ? formatMoney(price.amount, price.currencyCode) : '¥0'}
             </Text>
+            {showEarnPoints && price && calculateEarnPoints(price.amount) > 0 && (
+              <p className="text-[#78716c] text-xs tracking-wider">
+                {translations.ja.membership.earnHint.replace('{points}', String(calculateEarnPoints(price.amount)))}
+              </p>
+            )}
           </div>
         </div>
       </Link>

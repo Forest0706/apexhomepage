@@ -1,8 +1,10 @@
 import {useState, useRef, useCallback, useEffect} from 'react';
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link} from '@remix-run/react';
+import {useLoaderData, useRouteLoaderData, Link} from '@remix-run/react';
 import {getSeoMeta} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
+import {calculateEarnPoints} from '~/lib/bloy.utils';
+import {translations} from '~/data/translations';
 
 import {routeHeaders} from '~/data/cache';
 import {PRODUCT_QUERY} from '~/graphql/ProductQueries';
@@ -206,15 +208,13 @@ export async function loader({
       isLoggedIn = await customerAccount.isLoggedIn();
       if (isLoggedIn) {
         const {data} = await customerAccount.query(
-          `#graphql
-            query GetCustomerWishlist {
+          `query GetCustomerWishlist {
               customer {
                 metafield(namespace: "wishlist", key: "product_ids") {
                   value
                 }
               }
-            }
-          `,
+            }`,
         );
         if (data?.customer?.metafield?.value) {
           wishlistItems = JSON.parse(data.customer.metafield.value);
@@ -254,6 +254,11 @@ export default function Product() {
     wishlistItems = [],
     isLoggedIn = false,
   } = useLoaderData<typeof loader>();
+  const rootData = useRouteLoaderData<typeof import('~/root').loader>('root');
+  const shop = rootData?.layout?.shop;
+  const shippingPolicy = shop?.shippingPolicy;
+  const refundPolicy = shop?.refundPolicy;
+  const subscriptionPolicy = shop?.subscriptionPolicy;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('detail');
   const [quantity, setQuantity] = useState(1);
@@ -533,6 +538,14 @@ export default function Product() {
                   </span>
                   <span className="text-apex-muted text-sm">税込</span>
                 </div>
+                {calculateEarnPoints(product.price.amount) > 0 && (
+                  <p className="text-[#78716c] text-xs tracking-wider mt-1">
+                    {translations.ja.membership.earnHint.replace(
+                      '{points}',
+                      String(calculateEarnPoints(product.price.amount)),
+                    )}
+                  </p>
+                )}
                 <div className="grid grid-cols-2 gap-y-3 text-sm">
                   <div className="text-apex-muted">スケール</div>
                   <div className="text-apex-text">
@@ -633,6 +646,14 @@ export default function Product() {
                       <p className="text-apex-muted text-xs leading-relaxed">
                         本商品は予約受付中です。発売時期は予告なく変更となる場合がございます。複数商品を同時にご注文の場合、発売日が最も遅い商品に合わせての発送となります。
                       </p>
+                      {subscriptionPolicy && (
+                        <Link
+                          to={`/policies/${subscriptionPolicy.handle}`}
+                          className="inline-flex items-center gap-1 text-apex-accent-dark hover:text-apex-accent-warm text-xs transition-colors mt-2"
+                        >
+                          {subscriptionPolicy.title} →
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ) : isNew ? (
@@ -858,6 +879,14 @@ export default function Product() {
                 <br />
                 ・海外発送も承っております。詳細はお問い合わせください。
               </p>
+              {shippingPolicy && (
+                <Link
+                  to={`/policies/${shippingPolicy.handle}`}
+                  className="inline-flex items-center gap-1 text-apex-accent-dark hover:text-apex-accent-warm text-sm transition-colors mb-6"
+                >
+                  {shippingPolicy.title} →
+                </Link>
+              )}
               <h3 className="text-xl font-medium text-apex-text mb-4">
                 返品・交換について
               </h3>
@@ -868,6 +897,14 @@ export default function Product() {
                 <br />
                 ・お客様都合による返品の送料はお客様負担となります。
               </p>
+              {refundPolicy && (
+                <Link
+                  to={`/policies/${refundPolicy.handle}`}
+                  className="inline-flex items-center gap-1 text-apex-accent-dark hover:text-apex-accent-warm text-sm transition-colors mt-4"
+                >
+                  {refundPolicy.title} →
+                </Link>
+              )}
             </div>
           )}
         </div>

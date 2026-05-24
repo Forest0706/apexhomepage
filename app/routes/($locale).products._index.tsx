@@ -3,6 +3,8 @@ import clsx from 'clsx';
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, useFetcher, Link} from '@remix-run/react';
 import {getSeoMeta, getPaginationVariables} from '@shopify/hydrogen';
+import {calculateEarnPoints} from '~/lib/bloy.utils';
+import {translations} from '~/data/translations';
 
 import {routeHeaders} from '~/data/cache';
 import {
@@ -181,6 +183,12 @@ function getProductPrice(product: any): string {
     return `¥${price.toLocaleString()}`;
   }
   return '価格未設定';
+}
+
+function getProductPoints(product: any): number {
+  const amount = product.priceRange?.minVariantPrice?.amount
+    || product.variants?.nodes?.[0]?.price?.amount;
+  return amount ? calculateEarnPoints(amount) : 0;
 }
 
 function getProductTag(product: any): string | null {
@@ -365,13 +373,6 @@ export default function AllProducts() {
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
-      {/* DEBUG: Show category filter status */}
-      {currentCategory && (
-        <div className="bg-yellow-100 border-b border-yellow-300 px-4 py-2 text-sm">
-          🔍 Debug: 当前分类 = <strong>{currentCategory}</strong> | 产品数量 ={' '}
-          {products.length}
-        </div>
-      )}
       <section className="pt-32 pb-16 bg-[#f5f5f4] border-b border-[#e7e5e4]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
@@ -485,6 +486,11 @@ export default function AllProducts() {
                   <p className="text-[#78716c] font-serif text-lg">
                     {getProductPrice(product)}
                   </p>
+                  {getProductPoints(product) > 0 && (
+                    <p className="text-[#78716c] text-xs tracking-wider">
+                      {translations.ja.membership.earnHint.replace('{points}', String(getProductPoints(product)))}
+                    </p>
+                  )}
                 </Link>
               );
             })}
