@@ -201,13 +201,13 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
 
   if (!checkoutUrl) return null;
 
-  const fixedCheckoutUrl = checkoutUrl.replace(
-    rootData?.env?.storeDomain || '',
-    rootData?.env?.checkoutDomain || '',
-  );
+  // const fixedCheckoutUrl = checkoutUrl.replace(
+  //   rootData?.env?.storeDomain || '',
+  //   rootData?.env?.checkoutDomain || '',
+  // );
   return (
     <div className="flex flex-col mt-2">
-      <a href={fixedCheckoutUrl} target="_self">
+      <a href={checkoutUrl} target="_self">
         <Button as="span" width="full">
           Continue to Checkout
         </Button>
