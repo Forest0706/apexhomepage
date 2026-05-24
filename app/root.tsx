@@ -157,6 +157,10 @@ async function loadCriticalData({request, context}: LoaderFunctionArgs) {
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
       withPrivacyBanner: true,
     },
+    env: {
+      storeDomain: env.SHOPIFY_STORE_DOMAIN,
+      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+    },
     selectedLocale: {
       language: 'JA',
       country: 'JP',

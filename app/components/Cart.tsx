@@ -202,8 +202,8 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
   if (!checkoutUrl) return null;
 
   const fixedCheckoutUrl = checkoutUrl.replace(
-    env.SHOPIFY_STORE_DOMAIN, // apex-toys-8771.myshopify.com
-    env.PUBLIC_CHECKOUT_DOMAIN, // apex-toys.net
+    rootData?.env?.storeDomain || '',
+    rootData?.env?.checkoutDomain || '',
   );
   return (
     <div className="flex flex-col mt-2">
