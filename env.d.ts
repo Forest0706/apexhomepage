@@ -31,6 +31,7 @@ declare global {
     SHOP_ID: string;
     BLOY_API_KEY: string;
     PUBLIC_BLOY_EARN_POINTS_ENABLED: string;
+    MAINTENANCE_MODE?: string;
   }
 }
 

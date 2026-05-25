@@ -27,6 +27,28 @@ export default {
     executionContext: ExecutionContext,
   ): Promise<Response> {
     try {
+      if (env.MAINTENANCE_MODE === 'true') {
+        return new Response(
+          `<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>メンテナンス中 | APEX TOYS</title></head>
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;font-family:system-ui,sans-serif;background:#fafaf9;color:#44403c">
+<div style="text-align:center">
+<h1 style="font-size:1.5rem;margin-bottom:0.5rem">メンテナンス中</h1>
+<p style="color:#78716c">現在サイトのメンテナンスを行っています。しばらくお待ちください。</p>
+</div>
+</body>
+</html>`,
+          {
+            status: 503,
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Retry-After': '3600',
+            },
+          },
+        );
+      }
+
       /**
        * Open a cache instance in the worker and a custom session instance.
        */
